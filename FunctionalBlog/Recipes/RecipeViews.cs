@@ -51,7 +51,7 @@ public static class RecipeViews
             : string.Empty;
 
         var media = recipe.Images.Count > 0
-            ? $"""<div class="recipe-card-media"><img src="{Html.Encode(recipe.Images[0])}" alt="{Html.Encode(recipe.Name.Value)}" />{categoryBadge}</div>"""
+            ? $"""<div class="recipe-card-media"><img src="{Html.Encode(recipe.Images[0])}" alt="{Html.Encode(recipe.Name.Value)}"{ctx.FocalStyle(recipe.Images[0])} />{categoryBadge}</div>"""
             : $"""<div class="recipe-card-media">{categoryBadge}</div>""";
 
         var diffClass = recipe.Difficulty switch
@@ -130,7 +130,7 @@ public static class RecipeViews
             : HtmlString.Empty;
 
         var images = recipe.Images.Count > 0
-            ? Slider(recipe.Images, recipe.Name.Value, recipe.Id.Value)
+            ? Slider(recipe.Images, recipe.Name.Value, recipe.Id.Value, ctx)
             : ImagePlaceholder(recipe.Name.Value);
 
         // Calories are stored per serving, so they stay constant regardless of the chosen portions.
@@ -439,11 +439,11 @@ public static class RecipeViews
     // animation without JS).
     private const int SliderSecondsPerSlide = 6;
 
-    private static HtmlString Slider(IReadOnlyList<string> urls, string alt, int recipeId)
+    private static HtmlString Slider(IReadOnlyList<string> urls, string alt, int recipeId, ViewContext ctx)
     {
         if (urls.Count == 1)
         {
-            return Html.Raw($"""<div class="slider"><div class="slider-stack"><figure class="slide is-static"><img src="{Html.Encode(urls[0])}" alt="{Html.Encode(alt)}" /></figure></div></div>""");
+            return Html.Raw($"""<div class="slider"><div class="slider-stack"><figure class="slide is-static"><img src="{Html.Encode(urls[0])}" alt="{Html.Encode(alt)}"{ctx.FocalStyle(urls[0])} /></figure></div></div>""");
         }
 
         var count = urls.Count;
@@ -500,7 +500,7 @@ public static class RecipeViews
             $"""<input type="radio" name="{sliderId}-sel" id="{PickId(i)}" class="slider-pick" aria-label="{i + 1}" />"""));
 
         var slides = string.Concat(urls.Select(url =>
-            $"""<figure class="slide"><img src="{Html.Encode(url)}" alt="{Html.Encode(alt)}" /></figure>"""));
+            $"""<figure class="slide"><img src="{Html.Encode(url)}" alt="{Html.Encode(alt)}"{ctx.FocalStyle(url)} /></figure>"""));
 
         var dots = string.Concat(urls.Select((_, i) =>
             $"""<label class="slider-dot" for="{PickId(i)}" aria-label="{i + 1}"></label>"""));

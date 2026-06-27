@@ -77,5 +77,5 @@ public sealed class ImageUsageTests
     }
 
     private static ImageSummary Summary(int id) =>
-        new(new ImageId(id), $"image-{id}.jpg", ImageContentType.Jpeg, 1234, DateTimeOffset.UtcNow);
+        new(new ImageId(id), $"image-{id}.jpg", ImageContentType.Jpeg, 1234, DateTimeOffset.UtcNow, FocalPoint.Center);
 }

@@ -16,7 +16,7 @@ public static class BlogViews
         string Featured(Article a) =>
             $"""
             <a class="blog-featured" href="{ctx.Url(SlugEntityType.Article, a.Id.Value)}">
-                {Media(a)}
+                {Media(a, ctx)}
                 <div class="blog-featured-body">
                     <h2>{Html.Encode(a.Title.Value)}</h2>
                     <p class="blog-excerpt">{Html.Encode(a.Teaser.Value)}</p>
@@ -94,7 +94,7 @@ public static class BlogViews
 
         var cover = article.CoverImageId.Match(
             none: () => HtmlString.Empty,
-            some: imageId => Html.Div("cover", Html.Img($"/images/{imageId.Value}", article.Title.Value, cssClass: "cover-image")));
+            some: imageId => Html.Div("cover", Html.Img($"/images/{imageId.Value}", article.Title.Value, cssClass: "cover-image", style: ctx.FocalStyle($"/images/{imageId.Value}"))));
 
         var body = breadcrumb +
             Html.H1(article.Title.Value) +
@@ -164,7 +164,7 @@ public static class BlogViews
         ViewContext ctx) =>
         $"""
         <a class="blog-card" href="{ctx.Url(SlugEntityType.Article, a.Id.Value)}">
-            {Media(a)}
+            {Media(a, ctx)}
             <div class="blog-card-body">
                 <h3>{Html.Encode(a.Title.Value)}</h3>
                 <p class="blog-excerpt">{Html.Encode(a.Teaser.Value)}</p>
@@ -180,11 +180,11 @@ public static class BlogViews
         return $"""<span class="date-badge"><span class="day">{d.Day}</span><span class="month">{Html.Encode(month)}</span></span>""";
     }
 
-    private static string Media(Article a)
+    private static string Media(Article a, ViewContext ctx)
     {
         var img = a.CoverImageId.Match(
             none: () => string.Empty,
-            some: id => $"""<img src="/images/{id.Value}" alt="{Html.Encode(a.Title.Value)}" />""");
+            some: id => $"""<img src="/images/{id.Value}" alt="{Html.Encode(a.Title.Value)}"{ctx.FocalStyle($"/images/{id.Value}")} />""");
         return $"""<div class="blog-media">{img}{DateBadge(a)}</div>""";
     }
 

@@ -101,11 +101,13 @@ public static class Html
     public static HtmlString InputFile(string name, string accept, bool multiple = false) =>
         new HtmlString.Safe($"""<input type="file" name="{Encode(name)}" accept="{Encode(accept)}"{(multiple ? " multiple" : string.Empty)} />""");
 
-    public static HtmlString Img(string src, string alt, Option<string> cssClass = default)
+    // `style` is a pre-built, already-safe attribute fragment (with a leading space), e.g. the
+    // ` style="object-position:.."` produced by ViewContext.FocalStyle; pass "" for none.
+    public static HtmlString Img(string src, string alt, Option<string> cssClass = default, string style = "")
     {
         var classAttr = cssClass.Match(none: string.Empty, some: c => $" class=\"{Encode(c)}\"");
 
-        return new HtmlString.Safe($"""<img src="{Encode(src)}" alt="{Encode(alt)}"{classAttr} />""");
+        return new HtmlString.Safe($"""<img src="{Encode(src)}" alt="{Encode(alt)}"{classAttr}{style} />""");
     }
 
     public static HtmlString Fieldset(string legend, HtmlString body) =>

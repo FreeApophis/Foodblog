@@ -64,6 +64,46 @@ public abstract class ImageRepositoryContract
     }
 
     [Fact]
+    public async Task Save_then_Find_round_trips_a_non_centred_focal_point()
+    {
+        var repo = CreateRepository();
+        var id = await repo.NextId();
+        await repo.Save(AnImage(id) with { Focal = new FocalPoint(0.25, 0.8) });
+
+        var found = FunctionalAssert.Some(await repo.Find(id));
+
+        Assert.Equal(0.25, found.Focal.X);
+        Assert.Equal(0.8, found.Focal.Y);
+    }
+
+    [Fact]
+    public async Task A_freshly_saved_image_defaults_to_a_centred_focal_point()
+    {
+        var repo = CreateRepository();
+        var id = await repo.NextId();
+        await repo.Save(AnImage(id));
+
+        var found = FunctionalAssert.Some(await repo.Find(id));
+
+        Assert.True(found.Focal.IsCenter);
+    }
+
+    [Fact]
+    public async Task FocalPoints_returns_only_the_images_that_differ_from_the_centre()
+    {
+        var repo = CreateRepository();
+        var centred = await repo.NextId();
+        var offset = await repo.NextId();
+        await repo.Save(AnImage(centred));
+        await repo.Save(AnImage(offset) with { Focal = new FocalPoint(0.2, 0.9) });
+
+        var focals = await repo.FocalPoints();
+
+        Assert.False(focals.ContainsKey(centred.Value));
+        Assert.Equal(new FocalPoint(0.2, 0.9), focals[offset.Value]);
+    }
+
+    [Fact]
     public async Task Delete_removes_the_image()
     {
         var repo = CreateRepository();

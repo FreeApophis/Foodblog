@@ -9,6 +9,7 @@ public static class StaticHandlers
     private static readonly Lazy<string> ComboboxKeysContent = new(LoadComboboxKeys);
     private static readonly Lazy<string> ConfirmDeleteContent = new(LoadConfirmDelete);
     private static readonly Lazy<string> AutofocusSwapContent = new(LoadAutofocusSwap);
+    private static readonly Lazy<string> FocalPointContent = new(LoadFocalPoint);
     private static readonly ConcurrentDictionary<string, byte[]> BinaryCache = new();
 
     // Self-hosted design fonts (latin subset, variable weight). Whitelist of servable files.
@@ -43,6 +44,9 @@ public static class StaticHandlers
 
     public static App AutofocusSwapScript => _ => _ =>
         ValueTask.FromResult(Response.Js(AutofocusSwapContent.Value));
+
+    public static App FocalPointScript => _ => _ =>
+        ValueTask.FromResult(Response.Js(FocalPointContent.Value));
 
     public static App FaviconIco => _ => _ =>
         ValueTask.FromResult(Response.Bytes(
@@ -97,6 +101,12 @@ public static class StaticHandlers
     private static string LoadAutofocusSwap()
     {
         const string resourceName = "FunctionalBlog.wwwroot.autofocus-swap.js";
+        return LoadResource(resourceName);
+    }
+
+    private static string LoadFocalPoint()
+    {
+        const string resourceName = "FunctionalBlog.wwwroot.focal-point.js";
         return LoadResource(resourceName);
     }
 

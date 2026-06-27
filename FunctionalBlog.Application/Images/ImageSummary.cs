@@ -5,4 +5,5 @@ public sealed record ImageSummary(
     string FileName,
     ImageContentType ContentType,
     int ByteSize,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    FocalPoint Focal);

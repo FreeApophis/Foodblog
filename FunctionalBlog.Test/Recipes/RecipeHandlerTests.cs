@@ -179,6 +179,20 @@ public sealed class RecipeHandlerTests
     }
 
     [Fact]
+    public async Task ShowRecipe_applies_the_focal_point_to_the_header_slider_image()
+    {
+        var env = BuildEnv() with
+        {
+            Focal = new FocalIndex(new Dictionary<int, FocalPoint> { [7] = new FocalPoint(0.2, 0.8) }),
+        };
+        var id = await SeedRecipe(env, ["/images/7"]);
+
+        var response = await RecipeHandlers.ShowRecipe(id)(AnEmptyRequest())(env);
+
+        Assert.Contains("object-position:20% 80%", response.Body);
+    }
+
+    [Fact]
     public async Task ShowRecipe_renders_a_placeholder_when_there_are_no_images()
     {
         var env = BuildEnv();

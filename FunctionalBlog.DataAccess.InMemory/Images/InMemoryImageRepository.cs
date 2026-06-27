@@ -23,8 +23,14 @@ public sealed class InMemoryImageRepository : IImageRepository
         ValueTask.FromResult<IReadOnlyList<ImageSummary>>(
             _images.Values
                 .OrderByDescending(x => x.CreatedAt)
-                .Select(x => new ImageSummary(x.Id, x.FileName, x.ContentType, x.ByteSize, x.CreatedAt))
+                .Select(x => new ImageSummary(x.Id, x.FileName, x.ContentType, x.ByteSize, x.CreatedAt, x.Focal))
                 .ToList());
+
+    public ValueTask<IReadOnlyDictionary<int, FocalPoint>> FocalPoints() =>
+        ValueTask.FromResult<IReadOnlyDictionary<int, FocalPoint>>(
+            _images.Values
+                .Where(x => !x.Focal.IsCenter)
+                .ToDictionary(x => x.Id.Value, x => x.Focal));
 
     public ValueTask Delete(ImageId id)
     {

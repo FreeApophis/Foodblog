@@ -42,6 +42,7 @@ internal class Program
             AuthMiddleware.Create(),
             CsrfMiddleware.Create(),
             SlugMiddleware.Create(),
+            FocalMiddleware.Create(),
             Router.Create(Routes.Build()));
 
         web.Run(async http =>

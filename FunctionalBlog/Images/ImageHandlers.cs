@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace FunctionalBlog.Images;
 
 public static class ImageHandlers
@@ -36,9 +38,28 @@ public static class ImageHandlers
                 return Response.Redirect("/images");
             });
 
+    // Retunes an image's crop focal point from the library editor. The fractions come from a click on
+    // the image; FocalPoint clamps them, so a malformed or missing value collapses to the centre.
+    public static App SetFocal(ImageId id) => request => async env =>
+    {
+        if ((await env.Images.Find(id)) is not [var image])
+        {
+            return Response.NotFound(env.Ctx);
+        }
+
+        var focal = new FocalPoint(Fraction(request, "focal_x"), Fraction(request, "focal_y"));
+        await env.Images.Save(image with { Focal = focal });
+        return Response.Redirect("/images");
+    };
+
     public static App Delete(ImageId id) => _ => async env =>
     {
         await env.Images.Delete(id);
         return Response.Redirect("/images");
     };
+
+    private static double Fraction(Request request, string field) =>
+        request.Form.GetValueOrNone(field)
+            .Select(raw => double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var value) ? value : 0.5)
+            .GetOrElse(0.5);
 }

@@ -22,6 +22,7 @@ public sealed record Env(
     ITagRepository? Tags = null,
     ISlugRepository? Slugs = null,
     SlugIndex? SlugIndex = null,
+    FocalIndex? Focal = null,
     IConfigurationRepository? Configuration = null,
     ConfigurationCache? Config = null,
     IEmailSender? Email = null,
@@ -47,5 +48,5 @@ public sealed record Env(
             ? await maker.Ensure(entityType, entityId, sourceText)
             : entityId.ToString();
 
-    public ViewContext Ctx => new(CurrentUser, T, CsrfToken, Theme, Language, SlugIndex, SiteName);
+    public ViewContext Ctx => new(CurrentUser, T, CsrfToken, Theme, Language, SlugIndex, SiteName, Focal);
 }

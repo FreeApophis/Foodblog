@@ -391,6 +391,22 @@ article:hover {
     border: 1px solid var(--border);
 }
 
+/* Focal-point picker: clicking the framed image sets the crop centre (focal-point.js). */
+.image-card .focal-form { width: 100%; margin: 0; }
+.focal-pick { position: relative; display: block; cursor: crosshair; }
+.focal-pick img { display: block; }
+.focal-dot {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, .45);
+    pointer-events: none;
+}
+
 .image-card .embed-snippet {
     font-family: var(--mono);
     font-size: .72rem;
@@ -422,7 +438,9 @@ article:hover {
 }
 
 .slider-stack .slide { position: absolute; inset: 0; margin: 0; opacity: 0; }
-.slider-stack .slide.is-static { position: relative; opacity: 1; }
+/* height:100% is required so the lone static slide fills the fixed-height box; without it the img's
+   percentage height collapses to auto and object-fit/object-position (the focal crop) do nothing. */
+.slider-stack .slide.is-static { position: relative; opacity: 1; height: 100%; }
 .slider-stack .slide img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
 /* The per-image radios driving manual selection are visually hidden but stay keyboard-reachable. */

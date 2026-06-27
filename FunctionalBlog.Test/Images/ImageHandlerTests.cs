@@ -68,6 +68,36 @@ public sealed class ImageHandlerTests
     }
 
     [Fact]
+    public async Task SetFocal_persists_the_focal_point_and_redirects()
+    {
+        var env = BuildEnv();
+        var id = await env.Images.NextId();
+        await env.Images.Save(Image.Create(id, "katze.png", ImageContentType.Png, PngBytes, new UserId(1), env.Clock.Now));
+        var form = new Dictionary<string, string> { ["focal_x"] = "0.25", ["focal_y"] = "0.8" };
+        var request = new Request(HttpMethod.Post, $"/images/{id.Value}/focal", Empty, Empty, form, Empty);
+
+        var response = await ImageHandlers.SetFocal(id)(request)(env);
+
+        Assert.Equal(303, response.Status);
+        Assert.Equal("/images", response.Headers["Location"]);
+        var saved = FunctionalAssert.Some(await env.Images.Find(id));
+        Assert.Equal(0.25, saved.Focal.X);
+        Assert.Equal(0.8, saved.Focal.Y);
+    }
+
+    [Fact]
+    public async Task SetFocal_returns_404_for_an_unknown_image()
+    {
+        var env = BuildEnv();
+        var form = new Dictionary<string, string> { ["focal_x"] = "0.5", ["focal_y"] = "0.5" };
+        var request = new Request(HttpMethod.Post, "/images/999/focal", Empty, Empty, form, Empty);
+
+        var response = await ImageHandlers.SetFocal(new ImageId(999))(request)(env);
+
+        Assert.Equal(404, response.Status);
+    }
+
+    [Fact]
     public async Task Delete_removes_the_image_and_redirects()
     {
         var env = BuildEnv();

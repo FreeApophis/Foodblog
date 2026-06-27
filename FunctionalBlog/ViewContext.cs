@@ -1,9 +1,17 @@
 namespace FunctionalBlog;
 
-public sealed record ViewContext(IPrincipal Principal, Translate T, string CsrfToken, string Theme = "light", string Language = Languages.Default, SlugIndex? Slugs = null, string SiteName = "foodblog.ch")
+public sealed record ViewContext(IPrincipal Principal, Translate T, string CsrfToken, string Theme = "light", string Language = Languages.Default, SlugIndex? Slugs = null, string SiteName = "foodblog.ch", FocalIndex? Focal = null)
 {
     public static ViewContext ForGuest(string csrfToken = "") =>
         new(Guest.Instance, key => key, csrfToken);
+
+    // The ` style="object-position:.."` attribute (with a leading space) for an image referenced by
+    // a "/images/{id}" URL, or an empty string when the image is centred/unknown. Designed to be
+    // dropped straight into an <img> tag next to a cover-cropping rule so the subject stays in frame.
+    public string FocalStyle(string imageUrl) =>
+        ImageIdFrom(imageUrl)
+            .SelectMany(id => (Focal ?? FocalIndex.Empty).PositionFor(id))
+            .Match(none: string.Empty, some: position => $" style=\"object-position:{position}\"");
 
     // The canonical path for an entity (e.g. "/recipes/ruehrkuchen"), falling back to the numeric
     // id when no slug is registered or no slug index was threaded in (guest/test contexts).
@@ -23,5 +31,14 @@ public sealed record ViewContext(IPrincipal Principal, Translate T, string CsrfT
         principal = Principal;
         t = T;
         csrfToken = CsrfToken;
+    }
+
+    // Parses the trailing numeric id out of a "/images/{id}" URL. None for anything else.
+    private static Option<int> ImageIdFrom(string imageUrl)
+    {
+        const string prefix = "/images/";
+        return imageUrl.StartsWith(prefix, StringComparison.Ordinal) && int.TryParse(imageUrl[prefix.Length..], out var id)
+            ? Option.Some(id)
+            : Option<int>.None;
     }
 }

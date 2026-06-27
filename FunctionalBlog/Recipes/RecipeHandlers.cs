@@ -483,6 +483,7 @@ public static class RecipeHandlers
                     fiber: 0);
                 await env.Ingredients.Save(created);
                 env.Search?.IndexIngredient(created);
+                await env.EnsureSlug(SlugEntityType.Ingredient, created.Id.Value, created.Name.Value);
                 byName[line.Name] = created.Id;
                 id = created.Id;
             }

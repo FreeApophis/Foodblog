@@ -264,6 +264,23 @@ public sealed class RecipeHandlerTests
         Assert.Equal(created.Id, Assert.Single(recipe.Ingredients).IngredientId);
     }
 
+    // A quick-created ingredient must get a slug registered immediately, like the admin create path
+    // does — otherwise its /ingredients/{slug} link 404s until the startup SlugBackfill fills it in.
+    [Fact]
+    public async Task CreateRecipe_with_an_unknown_ingredient_name_registers_its_slug()
+    {
+        var slugs = new InMemorySlugRepository();
+        var env = BuildEnv(slugs: slugs);
+        var request = ARecipeRequest("/recipes") with { Form = RecipeForm(IngredientFields("Linguine", "200", "1")) };
+
+        var response = await RecipeHandlers.CreateRecipe(request)(env);
+
+        Assert.Equal(303, response.Status);
+        var created = Assert.Single(await env.Ingredients.All());
+        var slug = FunctionalAssert.Some(await slugs.FindSlug(SlugEntityType.Ingredient, created.Id.Value));
+        Assert.Equal("linguine", slug);
+    }
+
     [Fact]
     public async Task CreateRecipe_succeeds_when_existing_ingredients_share_a_name()
     {
@@ -728,7 +745,7 @@ public sealed class RecipeHandlerTests
         return new AuthenticatedUser(user, [role]);
     }
 
-    private static Env BuildEnv(IPrincipal? currentUser = null) => new(
+    private static Env BuildEnv(IPrincipal? currentUser = null, ISlugRepository? slugs = null) => new(
         Articles: new InMemoryArticleRepository(),
         Users: new InMemoryUserRepository(),
         Roles: new InMemoryRoleRepository(),
@@ -742,7 +759,8 @@ public sealed class RecipeHandlerTests
         Ingredients: new InMemoryIngredientRepository(),
         Units: new InMemoryUnitRepository(),
         Images: new InMemoryImageRepository(),
-        Pages: new InMemoryPageRepository());
+        Pages: new InMemoryPageRepository(),
+        Slugs: slugs);
 
     private static readonly IReadOnlyDictionary<string, string> Empty = new Dictionary<string, string>();
 }

@@ -46,7 +46,7 @@ public sealed class AdminHandlerTests
     }
 
     [Fact]
-    public async Task AddRule_saves_rule_to_role()
+    public async Task AddRule_saves_rule_and_returns_the_new_row_fragment()
     {
         var env = BuildAdminEnv();
         var roleId = await env.Roles.NextId();
@@ -54,9 +54,25 @@ public sealed class AdminHandlerTests
 
         var response = await AdminHandlers.AddRule(roleId.Value)(RuleRequest("Edit", "article"))(env);
 
-        Assert.Equal(303, response.Status);
+        Assert.Equal(200, response.Status);
         var saved = FunctionalAssert.Some(await env.Roles.FindById(roleId));
         Assert.Contains(new PermissionRule("Edit", "article"), saved.Rules);
+        Assert.Contains("rule-row-Edit-article", response.Body);
+    }
+
+    [Fact]
+    public async Task AddRule_does_not_duplicate_an_existing_rule_and_reports_it()
+    {
+        var env = BuildAdminEnv();
+        var roleId = await env.Roles.NextId();
+        await env.Roles.Save(Role.Create(roleId, "Autor").AddRule(new PermissionRule("Edit", "article")));
+
+        var response = await AdminHandlers.AddRule(roleId.Value)(RuleRequest("Edit", "article"))(env);
+
+        Assert.Equal(200, response.Status);
+        Assert.Single(FunctionalAssert.Some(await env.Roles.FindById(roleId)).Rules);
+        Assert.Contains("admin.roles.rule_exists", response.Body);
+        Assert.DoesNotContain("rule-row-Edit-article", response.Body);
     }
 
     [Fact]
@@ -69,9 +85,88 @@ public sealed class AdminHandlerTests
 
         var response = await AdminHandlers.DeleteRule(roleId.Value)(RuleRequest("Edit", "article"))(env);
 
-        Assert.Equal(303, response.Status);
+        Assert.Equal(200, response.Status);
         var saved = FunctionalAssert.Some(await env.Roles.FindById(roleId));
         Assert.Empty(saved.Rules);
+    }
+
+    [Fact]
+    public async Task RoleList_shows_a_new_role_button_and_a_deletable_row_per_role()
+    {
+        var env = BuildAdminEnv();
+        var roleId = await env.Roles.NextId();
+        await env.Roles.Save(Role.Create(roleId, "Autor"));
+
+        var response = await AdminHandlers.RoleList(ARequest())(env);
+
+        Assert.Equal(200, response.Status);
+        Assert.Contains("href=\"/admin/roles/new\"", response.Body);
+        Assert.Contains($"id=\"role-row-{roleId.Value}\"", response.Body);
+        Assert.Contains($"/admin/roles/{roleId.Value}/delete", response.Body);
+    }
+
+    [Fact]
+    public async Task RoleDetail_renders_the_rules_table_with_an_add_rule_button()
+    {
+        var env = BuildAdminEnv();
+        var roleId = await env.Roles.NextId();
+        await env.Roles.Save(Role.Create(roleId, "Autor").AddRule(new PermissionRule("Edit", "article")));
+
+        var response = await AdminHandlers.RoleDetail(roleId.Value)(ARequest())(env);
+
+        Assert.Equal(200, response.Status);
+        Assert.Contains("rule-row-Edit-article", response.Body);
+
+        // The add affordance is a button that reveals the inline editor — not a persistent input row.
+        Assert.Contains($"hx-get=\"/admin/roles/{roleId.Value}/rules/new-row\"", response.Body);
+        Assert.DoesNotContain("id=\"rule-add-row\"", response.Body);
+    }
+
+    [Fact]
+    public async Task NewRuleRow_returns_the_inline_editor_with_selects_and_a_save_post()
+    {
+        var env = BuildAdminEnv();
+        var roleId = await env.Roles.NextId();
+        await env.Roles.Save(Role.Create(roleId, "Autor"));
+
+        var response = await AdminHandlers.NewRuleRow(roleId.Value)(ARequest())(env);
+
+        Assert.Equal(200, response.Status);
+        Assert.Contains("id=\"rule-add-row\"", response.Body);
+        Assert.Contains("<select name=\"action\">", response.Body);
+        Assert.Contains("<select name=\"resource\">", response.Body);
+        Assert.Contains($"hx-post=\"/admin/roles/{roleId.Value}/rules\"", response.Body);
+        Assert.Contains("hx-include=\"closest .rule-add-row\"", response.Body);
+    }
+
+    [Fact]
+    public async Task NewRuleRow_lists_resources_beyond_the_old_hard_coded_four()
+    {
+        var env = BuildAdminEnv();
+        var roleId = await env.Roles.NextId();
+        await env.Roles.Save(Role.Create(roleId, "Autor"));
+
+        var response = await AdminHandlers.NewRuleRow(roleId.Value)(ARequest())(env);
+
+        Assert.Contains("value=\"recipe\"", response.Body);
+        Assert.Contains("value=\"ingredient\"", response.Body);
+        Assert.Contains("value=\"settings\"", response.Body);
+    }
+
+    [Fact]
+    public async Task RoleDetail_orders_rules_by_resource()
+    {
+        var env = BuildAdminEnv();
+        var roleId = await env.Roles.NextId();
+        await env.Roles.Save(Role.Create(roleId, "Autor")
+            .AddRule(new PermissionRule("Edit", "user"))
+            .AddRule(new PermissionRule("Edit", "article")));
+
+        var response = await AdminHandlers.RoleDetail(roleId.Value)(ARequest())(env);
+
+        var articleAt = response.Body.IndexOf("rule-row-Edit-article", StringComparison.Ordinal);
+        var userAt = response.Body.IndexOf("rule-row-Edit-user", StringComparison.Ordinal);
+        Assert.True(articleAt < userAt, "article rule should render before user rule");
     }
 
     [Fact]

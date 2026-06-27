@@ -874,6 +874,18 @@ button:hover, .btn:hover { filter: brightness(1.07); }
     .unit-row .unit-actions { grid-column: 1 / -1; }
 }
 
+/* Roles admin: reuses the unit-editor row styling with role-specific column counts (list = name +
+   rule count; detail = action + resource), each with a trailing actions column. */
+.role-editor .unit-head, .role-editor .unit-row { grid-template-columns: minmax(0, 1.6fr) 7rem 90px; }
+.rule-editor .unit-head, .rule-editor .unit-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 90px; }
+.rule-editor .rule-add-row select { margin: 0; }
+
+@media (max-width: 640px) {
+    .role-editor .unit-head, .rule-editor .unit-head { display: none; }
+    .role-editor .unit-row, .rule-editor .unit-row { grid-template-columns: 1fr 1fr; }
+    .role-editor .unit-row .unit-actions, .rule-editor .unit-row .unit-actions { grid-column: 1 / -1; }
+}
+
 /* Ingredient overview — read-only rows in the unit-editor card style; editing happens on its own
    page. Incomplete rows get a yellow warning badge next to the name. */
 .ingredient-editor .card-section-head { margin-bottom: .4rem; }

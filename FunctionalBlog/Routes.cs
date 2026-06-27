@@ -95,6 +95,8 @@ public static class Routes
         .Get("/admin/roles", Auth.RequirePermission<Manage>(new RoleResource(), AdminHandlers.RoleList))
         .Post("/admin/roles", Auth.RequirePermission<Create>(new RoleResource(), AdminHandlers.CreateRole))
         .Get("/admin/roles/{id}", p => Auth.RequirePermission<Manage>(new RoleResource(), AdminHandlers.RoleDetail(int.Parse(p[0]))))
+        .Get("/admin/roles/{id}/rules/new-row", p => Auth.RequirePermission<Manage>(new RuleResource(), AdminHandlers.NewRuleRow(int.Parse(p[0]))))
+        .Get("/admin/roles/{id}/rules/cancel-new", p => Auth.RequirePermission<Manage>(new RuleResource(), AdminHandlers.CancelNewRule))
         .Post("/admin/roles/{id}/rules", p => Auth.RequirePermission<Manage>(new RuleResource(), AdminHandlers.AddRule(int.Parse(p[0]))))
         .Post("/admin/roles/{id}/rules/delete", p => Auth.RequirePermission<Manage>(new RuleResource(), AdminHandlers.DeleteRule(int.Parse(p[0]))))
         .Post("/admin/roles/{id}/delete", p => Auth.RequirePermission<Manage>(new RoleResource(), AdminHandlers.DeleteRole(int.Parse(p[0]))))

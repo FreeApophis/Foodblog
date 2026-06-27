@@ -60,25 +60,38 @@ public static class AdminHandlers
         return Response.NotFound(env.Ctx);
     };
 
+    // htmx: opens the inline add-row at the end of the rules table.
+    public static App NewRuleRow(int roleId) => _ => async env =>
+        (await env.Roles.FindById(new RoleId(roleId))) is [var role]
+            ? Response.Html(AdminViews.AddRuleRow(role.Id, env.Ctx))
+            : Response.Html(string.Empty);
+
+    // htmx: cancelling the not-yet-saved add-row simply removes it (empty swap).
+    public static App CancelNewRule => _ => _ =>
+        ValueTask.FromResult(Response.Html(string.Empty));
+
+    // htmx: the add-row's save replaces itself (outerHTML) with the new rule's row on success, or
+    // re-renders the add-row plus an error banner when the rule is a duplicate or invalid.
     public static App AddRule(int roleId) => request => async env =>
         await (await env.Roles.FindById(new RoleId(roleId))).Match(
             none: () => Task.FromResult(Response.NotFound(env.Ctx)),
             some: async role =>
                 await RuleForm.Decode(request).Match(
-                    failure: f => Task.FromResult(
-                        Response.Html(AdminViews.RoleDetail(role, f.Error, env.Ctx), 400)),
+                    failure: f => Task.FromResult(Response.Html(AdminViews.AddRuleRow(role.Id, env.Ctx) + AdminViews.RulesError(f.Error, env.T))),
                     success: async s =>
                     {
                         var rule = new PermissionRule(s.Value.ActionName, s.Value.ResourceKey);
 
-                        if (!role.Rules.Contains(rule))
+                        if (role.Rules.Contains(rule))
                         {
-                            await env.Roles.Save(role.AddRule(rule));
+                            return Response.Html(AdminViews.AddRuleRow(role.Id, env.Ctx) + AdminViews.RulesError(["admin.roles.rule_exists"], env.T));
                         }
 
-                        return Response.Redirect($"/admin/roles/{roleId}");
+                        await env.Roles.Save(role.AddRule(rule));
+                        return Response.Html(AdminViews.RuleRow(role.Id, rule, env.Ctx) + AdminViews.RulesError([], env.T));
                     }));
 
+    // htmx: removes the rule's row (outerHTML swap with an empty body) and clears the error banner.
     public static App DeleteRule(int roleId) => request => async env =>
         await (await env.Roles.FindById(new RoleId(roleId))).Match(
             none: () => Task.FromResult(Response.NotFound(env.Ctx)),
@@ -86,9 +99,8 @@ public static class AdminHandlers
             {
                 var action = request.Form.GetValueOrNone("action").GetOrElse(string.Empty);
                 var resource = request.Form.GetValueOrNone("resource").GetOrElse(string.Empty);
-                var rule = new PermissionRule(action, resource);
-                await env.Roles.Save(role.RemoveRule(rule));
-                return Response.Redirect($"/admin/roles/{roleId}");
+                await env.Roles.Save(role.RemoveRule(new PermissionRule(action, resource)));
+                return Response.Html(AdminViews.RulesError([], env.T));
             });
 
     public static App DeleteRole(int roleId) => _ => async env =>

@@ -282,7 +282,7 @@ public static class RecipeViews
         var breadcrumb = titleKey == "recipe.edit_title"
             ? Html.Breadcrumb(
                 Crumb.Link(t("recipe.title"), "/recipes"),
-                Crumb.Link(name, formAction),
+                Crumb.Link(name, ctx.CanonicalFromAction(SlugEntityType.Recipe, formAction)),
                 Crumb.Current(t("common.edit")))
             : Html.Breadcrumb(
                 Crumb.Link(t("recipe.title"), "/recipes"),

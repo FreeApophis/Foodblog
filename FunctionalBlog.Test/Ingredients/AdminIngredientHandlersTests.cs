@@ -135,6 +135,31 @@ public sealed class AdminIngredientHandlersTests
     }
 
     [Fact]
+    public async Task EditForm_breadcrumb_includes_the_ingredient_name_linking_to_its_detail_page()
+    {
+        var env = BuildEnv();
+        var id = await SeedCompleteIngredient(env, "Mehl");
+
+        var response = await AdminIngredientHandlers.EditForm(id)(AnEmptyRequest())(env);
+
+        // Admin → Zutaten (list) → Mehl (detail) → Bearbeiten
+        Assert.Contains("href=\"/admin/ingredients\"", response.Body);
+        Assert.Contains($"href=\"/ingredients/{id.Value}\">Mehl</a>", response.Body);
+    }
+
+    [Fact]
+    public async Task NewForm_breadcrumb_has_no_ingredient_name_crumb()
+    {
+        var env = BuildEnv();
+
+        var response = await AdminIngredientHandlers.NewForm(AnEmptyRequest())(env);
+
+        // Admin → Zutaten (list) → Neu — there is no entity yet to link to.
+        Assert.Contains("href=\"/admin/ingredients\"", response.Body);
+        Assert.DoesNotContain("href=\"/ingredients/", response.Body);
+    }
+
+    [Fact]
     public async Task Update_changes_the_name_and_redirects()
     {
         var env = BuildEnv();

@@ -141,7 +141,7 @@ public static class BlogViews
         var breadcrumb = titleKey == "article.edit_title"
             ? Html.Breadcrumb(
                 Crumb.Link(t("blog.title"), "/"),
-                Crumb.Link(title, formAction),
+                Crumb.Link(title, ctx.CanonicalFromAction(SlugEntityType.Article, formAction)),
                 Crumb.Current(t("common.edit")))
             : Html.Breadcrumb(
                 Crumb.Link(t("blog.title"), "/"),

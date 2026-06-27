@@ -73,7 +73,7 @@ public static class PageViews
         var breadcrumb = titleKey == "page.edit_title"
             ? Html.Breadcrumb(
                 Crumb.Link(t("page.list_title"), "/pages"),
-                Crumb.Link(title, formAction),
+                Crumb.Link(title, ctx.CanonicalFromAction(SlugEntityType.Page, formAction)),
                 Crumb.Current(t("common.edit")))
             : Html.Breadcrumb(
                 Crumb.Link(t("page.list_title"), "/pages"),

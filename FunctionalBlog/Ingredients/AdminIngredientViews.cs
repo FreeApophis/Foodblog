@@ -110,11 +110,18 @@ public static class AdminIngredientViews
 
         var form = Html.Form(formAction, Html.CsrfField(csrfToken) + basics + nutrition + saveBar, cssClass: "ingredient-form");
 
-        var leaf = titleKey == "ingredient.edit_title" ? t("common.edit") : t("common.new");
-        var breadcrumb = Html.Breadcrumb(
-            Crumb.Link(t("nav.admin"), "/admin"),
-            Crumb.Link(t("ingredient.list_title"), "/admin/ingredients"),
-            Crumb.Current(leaf));
+        // Edit gains a crumb for the specific ingredient (linking to its public page), matching the
+        // recipe/page/article edit breadcrumbs; new has no entity to link to yet.
+        var breadcrumb = titleKey == "ingredient.edit_title"
+            ? Html.Breadcrumb(
+                Crumb.Link(t("nav.admin"), "/admin"),
+                Crumb.Link(t("ingredient.list_title"), "/admin/ingredients"),
+                Crumb.Link(name, ctx.CanonicalFromAction(SlugEntityType.Ingredient, formAction)),
+                Crumb.Current(t("common.edit")))
+            : Html.Breadcrumb(
+                Crumb.Link(t("nav.admin"), "/admin"),
+                Crumb.Link(t("ingredient.list_title"), "/admin/ingredients"),
+                Crumb.Current(t("common.new")));
 
         var body = breadcrumb +
             Html.H1(t(titleKey)) +

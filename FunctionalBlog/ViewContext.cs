@@ -21,6 +21,17 @@ public sealed record ViewContext(IPrincipal Principal, Translate T, string CsrfT
     // their own URL around it, such as SEO canonical links.
     public string SlugFor(string entityType, int id) => (Slugs ?? SlugIndex.Empty).For(entityType, id);
 
+    // The canonical (slug) detail URL for an entity whose id-based action path is given, e.g. turning
+    // an edit form's "/recipes/42" POST target into "/recipes/ruehrkuchen". Falls back to the action
+    // path unchanged when it has no trailing numeric id (so non-entity actions stay intact).
+    public string CanonicalFromAction(string entityType, string actionPath)
+    {
+        var lastSlash = actionPath.LastIndexOf('/');
+        return lastSlash >= 0 && int.TryParse(actionPath[(lastSlash + 1)..], out var id)
+            ? Url(entityType, id)
+            : actionPath;
+    }
+
     // The canonical /tag/{slug} path for a tag referenced by name.
     public string TagUrl(string name) => (Slugs ?? SlugIndex.Empty).TagUrl(name);
 

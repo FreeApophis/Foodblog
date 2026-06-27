@@ -511,6 +511,25 @@ public sealed class RecipeHandlerTests
     }
 
     [Fact]
+    public async Task EditRecipeForm_breadcrumb_links_the_recipe_name_to_its_slug_not_its_id()
+    {
+        var env = BuildEnv();
+        var id = await SeedRecipe(env, []);
+        var slugged = env with
+        {
+            SlugIndex = new SlugIndex(new Dictionary<string, IReadOnlyDictionary<int, string>>
+            {
+                [SlugEntityType.Recipe] = new Dictionary<int, string> { [id.Value] = "ruehrkuchen" },
+            }),
+        };
+
+        var response = await RecipeHandlers.EditRecipeForm(id)(AnEmptyRequest())(slugged);
+
+        Assert.Contains("href=\"/recipes/ruehrkuchen\"", response.Body);
+        Assert.DoesNotContain($"href=\"/recipes/{id.Value}\"", response.Body);
+    }
+
+    [Fact]
     public async Task IngredientSearch_returns_only_matching_ingredient_names()
     {
         var env = BuildEnv();

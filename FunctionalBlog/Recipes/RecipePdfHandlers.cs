@@ -22,7 +22,7 @@ public static class RecipePdfHandlers
         var ingredientNames = (await env.Ingredients.All()).ToDictionary(i => i.Id, i => i.Name.Value);
         var cover = await LoadCover(env, recipe);
 
-        var model = RecipePdfMapper.Create(recipe, displayPortions, authorName, ingredientNames, cover, t);
+        var model = RecipePdfMapper.Create(recipe, displayPortions, authorName, ingredientNames, cover.Bytes, t, cover.Focal);
 
         var bytes = RecipePdf.Generate(model, design, t);
         var filename = $"{Slug.From(recipe.Name.Value)}.pdf";
@@ -39,21 +39,25 @@ public static class RecipePdfHandlers
             .Select(raw => int.TryParse(raw, out var n) && n >= 1 ? n : fallback)
             .GetOrElse(fallback);
 
-    // The recipe's cover is the first image, stored as a "/images/{id}" URL — pull its bytes for embedding.
-    private static async Task<byte[]?> LoadCover(Env env, Recipe recipe)
+    // The recipe's cover is the first image, stored as a "/images/{id}" URL — pull its bytes and crop
+    // focal point for embedding. The focal point lets the PDF crop around the subject (as the web
+    // slider does), not just the centre.
+    private static async Task<(byte[]? Bytes, FocalPoint Focal)> LoadCover(Env env, Recipe recipe)
     {
         if (recipe.Images.Count == 0)
         {
-            return null;
+            return (null, FocalPoint.Center);
         }
 
         var url = recipe.Images[0];
         var lastSlash = url.LastIndexOf('/');
         if (lastSlash < 0 || !int.TryParse(url[(lastSlash + 1)..], out var imageId))
         {
-            return null;
+            return (null, FocalPoint.Center);
         }
 
-        return (await env.Images.Find(new ImageId(imageId))) is [var image] ? image.Data : null;
+        return (await env.Images.Find(new ImageId(imageId))) is [var image]
+            ? (image.Data, image.Focal)
+            : (null, FocalPoint.Center);
     }
 }

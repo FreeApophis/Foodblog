@@ -22,6 +22,24 @@ public sealed class RecipePdfMapperTests
         Assert.StartsWith("400", Assert.Single(model.Ingredients).Amount);
     }
 
+    [Fact]
+    public void Create_carries_the_cover_focal_point_into_the_model()
+    {
+        var focal = new FocalPoint(0.2, 0.8);
+
+        var model = RecipePdfMapper.Create(ARecipe(basePortions: 2, amount: 200m), 2, "Sabrina", Names(), [1, 2, 3], Echo, focal);
+
+        Assert.Equal(focal, model.CoverFocal);
+    }
+
+    [Fact]
+    public void Create_defaults_to_a_centred_cover_focal_point()
+    {
+        var model = RecipePdfMapper.Create(ARecipe(basePortions: 2, amount: 200m), 2, "Sabrina", Names(), null, Echo);
+
+        Assert.True(model.CoverFocal.IsCenter);
+    }
+
     private static IReadOnlyDictionary<IngredientId, string> Names() =>
         new Dictionary<IngredientId, string> { [new IngredientId(1)] = "Mehl" };
 

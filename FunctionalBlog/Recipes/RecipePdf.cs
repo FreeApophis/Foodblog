@@ -134,7 +134,7 @@ public static class RecipePdf
                     });
                     layers.Layer().Padding(30).Element(brand => Brand(brand, "#d7cba6"));
                 });
-                row.ConstantItem(215).Element(photo => Photo(photo, model.CoverImage, PhotoRatio, GreenDark));
+                row.ConstantItem(215).Element(photo => Photo(photo, model.CoverImage, PhotoRatio, GreenDark, model.CoverFocal));
             });
 
             col.Item().Background(Dark).Row(row =>
@@ -158,7 +158,7 @@ public static class RecipePdf
     {
         container.Layers(layers =>
         {
-            if (CoverCrop(model.CoverImage, HeroRatio) is { } bytes)
+            if (CoverCrop(model.CoverImage, HeroRatio, model.CoverFocal) is { } bytes)
             {
                 layers.PrimaryLayer().Image(bytes).FitArea();
             }
@@ -220,9 +220,9 @@ public static class RecipePdf
 
     private static string F(float value) => value.ToString("0.###", CultureInfo.InvariantCulture);
 
-    private static void Photo(IContainer container, byte[]? source, float ratio, string fallback)
+    private static void Photo(IContainer container, byte[]? source, float ratio, string fallback, FocalPoint focal)
     {
-        if (CoverCrop(source, ratio) is { } data)
+        if (CoverCrop(source, ratio, focal) is { } data)
         {
             container.Image(data).FitArea();
         }
@@ -335,9 +335,10 @@ public static class RecipePdf
         container.Background(background).PaddingVertical(11).PaddingHorizontal(34)
             .Text("FOODBLOG.CH — SELBER MACHEN").FontFamily(Mono).FontSize(7.5f).FontColor(color).LetterSpacing(0.12f);
 
-    // Centre-crops the image to exactly the target width:height ratio so it fills its box without
-    // distortion (cover); returns null when there is no image.
-    private static byte[]? CoverCrop(byte[]? source, float targetRatio)
+    // Crops the image to exactly the target width:height ratio so it fills its box without distortion
+    // (cover), positioning the crop window around the focal point (matching the web slider) rather
+    // than always the centre; returns null when there is no image.
+    private static byte[]? CoverCrop(byte[]? source, float targetRatio, FocalPoint focal)
     {
         if (source is null)
         {
@@ -368,8 +369,8 @@ public static class RecipePdf
             return source;
         }
 
-        var left = (bitmap.Width - cropWidth) / 2;
-        var top = (bitmap.Height - cropHeight) / 2;
+        var left = focal.CropLeft(bitmap.Width, cropWidth);
+        var top = focal.CropTop(bitmap.Height, cropHeight);
 
         using var subset = new SKBitmap(cropWidth, cropHeight);
         if (!bitmap.ExtractSubset(subset, new SKRectI(left, top, left + cropWidth, top + cropHeight)))

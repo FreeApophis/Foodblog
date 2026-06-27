@@ -71,5 +71,6 @@ public sealed class RecipePdfTests
             "Mehl mit Paprika, Salz und Pfeffer vermischen.",
         ],
         Tips: ["Den Fruchtcocktail gut abtropfen lassen."],
-        CoverImage: null);
+        CoverImage: null,
+        CoverFocal: FocalPoint.Center);
 }

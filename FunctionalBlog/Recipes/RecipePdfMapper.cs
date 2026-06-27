@@ -10,7 +10,8 @@ public static class RecipePdfMapper
         string authorName,
         IReadOnlyDictionary<IngredientId, string> ingredientNames,
         byte[]? coverImage,
-        Translate t)
+        Translate t,
+        FocalPoint? coverFocal = null)
     {
         var factor = recipe.Portions > 0 ? (decimal)displayPortions / recipe.Portions : 1m;
 
@@ -34,7 +35,8 @@ public static class RecipePdfMapper
             Ingredients: ingredients,
             Steps: recipe.PreparationSteps.OrderBy(step => step.SortOrder).Select(step => step.Text).ToList(),
             Tips: recipe.Hints.Select(hint => hint.Text).ToList(),
-            CoverImage: coverImage);
+            CoverImage: coverImage,
+            CoverFocal: coverFocal ?? FocalPoint.Center);
     }
 
     private static string DifficultyKey(Difficulty difficulty) => difficulty switch

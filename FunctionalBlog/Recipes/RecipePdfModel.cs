@@ -14,6 +14,7 @@ public sealed record RecipePdfModel(
     IReadOnlyList<RecipePdfIngredient> Ingredients,
     IReadOnlyList<string> Steps,
     IReadOnlyList<string> Tips,
-    byte[]? CoverImage);
+    byte[]? CoverImage,
+    FocalPoint CoverFocal);
 
 public sealed record RecipePdfIngredient(string Amount, string Name);

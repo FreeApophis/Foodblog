@@ -24,10 +24,10 @@ jobs:
       - name: Restore
         run: dotnet restore
 
-      # Build & test before shipping — a tag should never publish a broken build.
-      - name: Test
-        run: dotnet test --configuration Release --verbosity normal
-
+      # Tests are the CI gate: main is branch-protected to require the
+      # "Build & Test" check, so any commit you tag has already gone green.
+      # Re-running the suite here only adds latency and re-exposes releases to
+      # flaky tests, so publish just builds and ships the tagged commit.
       - name: Publish (self-contained linux-x64)
         run: >
           dotnet publish FunctionalBlog/FunctionalBlog.csproj

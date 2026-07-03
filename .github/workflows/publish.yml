@@ -1,0 +1,53 @@
+name: Publish
+
+on:
+  push:
+    tags: ['v*']
+
+# Allow the workflow to create a GitHub Release and upload assets.
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore
+
+      # Build & test before shipping — a tag should never publish a broken build.
+      - name: Test
+        run: dotnet test --configuration Release --verbosity normal
+
+      - name: Publish (self-contained linux-x64)
+        run: >
+          dotnet publish FunctionalBlog/FunctionalBlog.csproj
+          --configuration Release
+          --runtime linux-x64
+          --self-contained true
+          --output publish
+
+      - name: Package
+        run: |
+          asset="FunctionalBlog-${GITHUB_REF_NAME}-linux-x64.zip"
+          echo "ASSET=$asset" >> "$GITHUB_ENV"
+          cd publish
+          zip -r "../$asset" .
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "${GITHUB_REF_NAME}"
+          "${ASSET}"
+          --title "${GITHUB_REF_NAME}"
+          --generate-notes

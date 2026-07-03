@@ -9,9 +9,14 @@ permissions:
   contents: write
 
 jobs:
-  publish:
-    name: Publish Release
+  # Build a self-contained bundle per runtime. Both RIDs cross-compile fine on
+  # Linux, so one runner handles the whole matrix.
+  build:
+    name: Build ${{ matrix.rid }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rid: [linux-x64, win-x64]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,28 +31,47 @@ jobs:
 
       # Tests are the CI gate: main is branch-protected to require the
       # "Build & Test" check, so any commit you tag has already gone green.
-      # Re-running the suite here only adds latency and re-exposes releases to
-      # flaky tests, so publish just builds and ships the tagged commit.
-      - name: Publish (self-contained linux-x64)
+      # Publish just builds and ships the tagged commit.
+      - name: Publish (self-contained ${{ matrix.rid }})
         run: >
           dotnet publish FunctionalBlog/FunctionalBlog.csproj
           --configuration Release
-          --runtime linux-x64
+          --runtime ${{ matrix.rid }}
           --self-contained true
           --output publish
 
       - name: Package
         run: |
-          asset="FunctionalBlog-${GITHUB_REF_NAME}-linux-x64.zip"
-          echo "ASSET=$asset" >> "$GITHUB_ENV"
+          asset="FunctionalBlog-${GITHUB_REF_NAME}-${{ matrix.rid }}.zip"
           cd publish
           zip -r "../$asset" .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FunctionalBlog-${{ matrix.rid }}
+          path: FunctionalBlog-*-${{ matrix.rid }}.zip
+          if-no-files-found: error
+
+  # Collect every artifact and cut a single release so the matrix jobs don't
+  # race to create it.
+  release:
+    name: Publish Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: >
           gh release create "${GITHUB_REF_NAME}"
-          "${ASSET}"
+          artifacts/*.zip
           --title "${GITHUB_REF_NAME}"
           --generate-notes

@@ -9,14 +9,18 @@ permissions:
   contents: write
 
 jobs:
-  # Build a self-contained bundle per runtime. Both RIDs cross-compile fine on
-  # Linux, so one runner handles the whole matrix.
+  # Build a compressed, self-contained single-file executable per runtime.
+  # Both RIDs cross-compile fine on Linux, so one runner handles the matrix.
   build:
     name: Build ${{ matrix.rid }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rid: [linux-x64, win-x64]
+        include:
+          - rid: linux-x64
+            ext: ''
+          - rid: win-x64
+            ext: '.exe'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,26 +35,32 @@ jobs:
 
       # Tests are the CI gate: main is branch-protected to require the
       # "Build & Test" check, so any commit you tag has already gone green.
-      # Publish just builds and ships the tagged commit.
-      - name: Publish (self-contained ${{ matrix.rid }})
+      # PublishSingleFile bundles the managed assemblies; the two extra props
+      # embed the native libs (libSkiaSharp, e_sqlite3) into the one file and
+      # compress it (~150 MB -> ~75 MB). wwwroot ships as embedded resources,
+      # so the single binary runs standalone.
+      - name: Publish single-file (${{ matrix.rid }})
         run: >
           dotnet publish FunctionalBlog/FunctionalBlog.csproj
           --configuration Release
           --runtime ${{ matrix.rid }}
           --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:DebugType=none
           --output publish
 
-      - name: Package
-        run: |
-          asset="FunctionalBlog-${GITHUB_REF_NAME}-${{ matrix.rid }}.zip"
-          cd publish
-          zip -r "../$asset" .
+      - name: Rename executable
+        run: >
+          mv "publish/FunctionalBlog${{ matrix.ext }}"
+          "FunctionalBlog-${GITHUB_REF_NAME}-${{ matrix.rid }}${{ matrix.ext }}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: FunctionalBlog-${{ matrix.rid }}
-          path: FunctionalBlog-*-${{ matrix.rid }}.zip
+          path: FunctionalBlog-${{ github.ref_name }}-${{ matrix.rid }}${{ matrix.ext }}
           if-no-files-found: error
 
   # Collect every artifact and cut a single release so the matrix jobs don't
@@ -72,6 +82,6 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: >
           gh release create "${GITHUB_REF_NAME}"
-          artifacts/*.zip
+          artifacts/*
           --title "${GITHUB_REF_NAME}"
           --generate-notes

@@ -1,17 +1,17 @@
-using System.Data;
 using Dapper;
 
 namespace FunctionalBlog.DataAccess.Sqlite;
 
 public sealed class SqliteTagRepository : ITagRepository
 {
-    private readonly IDbConnection _connection;
+    private readonly SqliteConnectionFactory _connections;
 
-    public SqliteTagRepository(IDbConnection connection) => _connection = connection;
+    public SqliteTagRepository(SqliteConnectionFactory connections) => _connections = connections;
 
     public async ValueTask<Option<Tag>> FindBySlug(string slug)
     {
-        var row = await _connection.QuerySingleOrDefaultAsync<TagRow>(
+        await using var connection = await _connections.OpenAsync();
+        var row = await connection.QuerySingleOrDefaultAsync<TagRow>(
             "SELECT s.slug AS Slug, t.name AS Name " +
             "FROM slugs s JOIN tags t ON t.id = s.entity_id " +
             "WHERE s.entity_type = 'tag' AND s.slug = @slug",
@@ -22,13 +22,15 @@ public sealed class SqliteTagRepository : ITagRepository
 
     public async ValueTask<IReadOnlyList<TagEntry>> All()
     {
-        var rows = await _connection.QueryAsync<TagEntryRow>("SELECT id AS Id, name AS Name FROM tags");
+        await using var connection = await _connections.OpenAsync();
+        var rows = await connection.QueryAsync<TagEntryRow>("SELECT id AS Id, name AS Name FROM tags");
         return rows.Select(r => new TagEntry((int)r.Id, r.Name)).ToList();
     }
 
     public async ValueTask<Option<int>> FindIdByName(string name)
     {
-        var id = await _connection.ExecuteScalarAsync<long?>(
+        await using var connection = await _connections.OpenAsync();
+        var id = await connection.ExecuteScalarAsync<long?>(
             "SELECT id FROM tags WHERE name = @name COLLATE NOCASE ORDER BY id LIMIT 1",
             new { name });
 

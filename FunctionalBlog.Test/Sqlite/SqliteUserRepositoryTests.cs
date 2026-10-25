@@ -9,7 +9,7 @@ public sealed class SqliteUserRepositoryTests : UserRepositoryContract, IDisposa
     [Fact]
     public async Task Save_persists_and_restores_the_avatar_image_id()
     {
-        var images = new SqliteImageRepository(_db.Connection);
+        var images = new SqliteImageRepository(_db.Connections);
         var imageId = await images.NextId();
         await images.Save(Image.Create(imageId, "avatar.png", ImageContentType.Png, [0x89, 0x50], new UserId(1), DateTimeOffset.UtcNow));
 
@@ -29,5 +29,5 @@ public sealed class SqliteUserRepositoryTests : UserRepositoryContract, IDisposa
         Assert.Equal(Option.Some(user), await repo.FindById(id));
     }
 
-    protected override IUserRepository CreateRepository() => new SqliteUserRepository(_db.Connection);
+    protected override IUserRepository CreateRepository() => new SqliteUserRepository(_db.Connections);
 }

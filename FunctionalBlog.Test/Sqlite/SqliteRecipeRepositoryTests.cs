@@ -6,5 +6,5 @@ public sealed class SqliteRecipeRepositoryTests : RecipeRepositoryContract, IDis
 
     public void Dispose() => _db.Dispose();
 
-    protected override IRecipeRepository CreateRepository() => new SqliteRecipeRepository(_db.Connection);
+    protected override IRecipeRepository CreateRepository() => new SqliteRecipeRepository(_db.Connections);
 }

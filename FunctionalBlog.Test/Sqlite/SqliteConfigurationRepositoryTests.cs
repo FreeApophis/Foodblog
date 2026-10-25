@@ -6,5 +6,5 @@ public sealed class SqliteConfigurationRepositoryTests : Test.Configuration.Conf
 
     public void Dispose() => _db.Dispose();
 
-    protected override IConfigurationRepository Create() => new SqliteConfigurationRepository(_db.Connection);
+    protected override IConfigurationRepository Create() => new SqliteConfigurationRepository(_db.Connections);
 }

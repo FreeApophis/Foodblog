@@ -1,25 +1,26 @@
-using System.Data;
 using Dapper;
 
 namespace FunctionalBlog.DataAccess.Sqlite;
 
 public sealed class SqliteUnitRepository : IUnitRepository
 {
-    private readonly IDbConnection _connection;
+    private readonly SqliteConnectionFactory _connections;
     private int _nextId = -1;
 
-    public SqliteUnitRepository(IDbConnection connection) => _connection = connection;
+    public SqliteUnitRepository(SqliteConnectionFactory connections) => _connections = connections;
 
     public async ValueTask<IReadOnlyList<Unit>> All()
     {
-        var rows = await _connection.QueryAsync<UnitRow>(
+        await using var connection = await _connections.OpenAsync();
+        var rows = await connection.QueryAsync<UnitRow>(
             "SELECT id AS Id, category AS Category, unit_factor AS Factor, name_key AS NameKey, abbreviation_key AS AbbreviationKey FROM units ORDER BY id");
         return rows.Select(ToUnit).ToList();
     }
 
     public async ValueTask<Option<Unit>> Find(UnitId id)
     {
-        var row = await _connection.QuerySingleOrDefaultAsync<UnitRow>(
+        await using var connection = await _connections.OpenAsync();
+        var row = await connection.QuerySingleOrDefaultAsync<UnitRow>(
             "SELECT id AS Id, category AS Category, unit_factor AS Factor, name_key AS NameKey, abbreviation_key AS AbbreviationKey FROM units WHERE id = @id",
             new { id = id.Value });
 
@@ -28,9 +29,10 @@ public sealed class SqliteUnitRepository : IUnitRepository
 
     public async ValueTask<UnitId> NextId()
     {
+        await using var connection = await _connections.OpenAsync();
         if (_nextId < 0)
         {
-            _nextId = await _connection.ExecuteScalarAsync<int>("SELECT COALESCE(MAX(id), 0) FROM units");
+            _nextId = await connection.ExecuteScalarAsync<int>("SELECT COALESCE(MAX(id), 0) FROM units");
         }
 
         return new UnitId(++_nextId);
@@ -38,7 +40,8 @@ public sealed class SqliteUnitRepository : IUnitRepository
 
     public async ValueTask Save(Unit unit)
     {
-        await _connection.ExecuteAsync(
+        await using var connection = await _connections.OpenAsync();
+        await connection.ExecuteAsync(
             """
             INSERT OR REPLACE INTO units (id, category, unit_factor, name_key, abbreviation_key)
             VALUES (@Id, @Category, @Factor, @NameKey, @AbbreviationKey)
@@ -55,7 +58,8 @@ public sealed class SqliteUnitRepository : IUnitRepository
 
     public async ValueTask Delete(UnitId id)
     {
-        await _connection.ExecuteAsync("DELETE FROM units WHERE id = @id", new { id = id.Value });
+        await using var connection = await _connections.OpenAsync();
+        await connection.ExecuteAsync("DELETE FROM units WHERE id = @id", new { id = id.Value });
     }
 
     private static Unit ToUnit(UnitRow row) =>

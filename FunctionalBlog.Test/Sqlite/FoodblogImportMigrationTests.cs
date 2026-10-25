@@ -11,7 +11,7 @@ public sealed class FoodblogImportMigrationTests : IDisposable
     [Fact]
     public async Task Imports_the_four_blog_articles()
     {
-        var articles = new SqliteArticleRepository(_db.Connection);
+        var articles = new SqliteArticleRepository(_db.Connections);
 
         var all = await articles.All();
 
@@ -23,11 +23,11 @@ public sealed class FoodblogImportMigrationTests : IDisposable
     [Fact]
     public async Task Imports_all_recipes_with_parseable_units()
     {
-        var recipes = new SqliteRecipeRepository(_db.Connection);
+        var recipes = new SqliteRecipeRepository(_db.Connections);
 
         // All() joins each recipe_ingredient to units; every unit_id must resolve to a seeded unit.
         var all = await recipes.All();
-        var unitIds = (await new SqliteUnitRepository(_db.Connection).All()).Select(u => u.Id.Value).ToHashSet();
+        var unitIds = (await new SqliteUnitRepository(_db.Connections).All()).Select(u => u.Id.Value).ToHashSet();
 
         Assert.Equal(36, all.Count);
         Assert.Contains(all, r => r.Name.Value == "Älpler One-Pot");
@@ -38,7 +38,7 @@ public sealed class FoodblogImportMigrationTests : IDisposable
     [Fact]
     public async Task Imports_all_ingredients()
     {
-        var ingredients = new SqliteIngredientRepository(_db.Connection);
+        var ingredients = new SqliteIngredientRepository(_db.Connections);
 
         var all = await ingredients.All();
 
@@ -49,7 +49,7 @@ public sealed class FoodblogImportMigrationTests : IDisposable
     [Fact]
     public async Task Imports_the_two_authors_with_admin_role()
     {
-        var users = new SqliteUserRepository(_db.Connection);
+        var users = new SqliteUserRepository(_db.Connections);
 
         // The two content authors are seeded first (Thomas id 1, Sabrina id 2); the dedicated
         // admin@blog.de account follows at id 3.
@@ -65,7 +65,7 @@ public sealed class FoodblogImportMigrationTests : IDisposable
     [Fact]
     public async Task Imports_recipe_steps_tags_and_hints()
     {
-        var recipes = new SqliteRecipeRepository(_db.Connection);
+        var recipes = new SqliteRecipeRepository(_db.Connections);
 
         var rhabarber = FunctionalAssert.Some(await recipes.Find(new RecipeId(9)));
 
@@ -76,7 +76,7 @@ public sealed class FoodblogImportMigrationTests : IDisposable
     [Fact]
     public async Task Decodes_html_entities_in_text()
     {
-        var recipes = new SqliteRecipeRepository(_db.Connection);
+        var recipes = new SqliteRecipeRepository(_db.Connections);
 
         var all = await recipes.All();
 

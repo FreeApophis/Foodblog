@@ -6,5 +6,5 @@ public sealed class SqliteImageRepositoryTests : ImageRepositoryContract, IDispo
 
     public void Dispose() => _db.Dispose();
 
-    protected override IImageRepository CreateRepository() => new SqliteImageRepository(_db.Connection);
+    protected override IImageRepository CreateRepository() => new SqliteImageRepository(_db.Connections);
 }

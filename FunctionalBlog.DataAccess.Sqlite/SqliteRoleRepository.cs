@@ -1,18 +1,18 @@
-using System.Data;
 using Dapper;
 
 namespace FunctionalBlog.DataAccess.Sqlite;
 
 public sealed class SqliteRoleRepository : IRoleRepository
 {
-    private readonly IDbConnection _connection;
+    private readonly SqliteConnectionFactory _connections;
     private int _nextId = -1;
 
-    public SqliteRoleRepository(IDbConnection connection) => _connection = connection;
+    public SqliteRoleRepository(SqliteConnectionFactory connections) => _connections = connections;
 
     public async ValueTask<IReadOnlyList<Role>> All()
     {
-        var rows = (await _connection.QueryAsync<RoleRow>(
+        await using var connection = await _connections.OpenAsync();
+        var rows = (await connection.QueryAsync<RoleRow>(
             "SELECT id AS Id, name AS Name FROM roles")).ToList();
         if (rows.Count == 0)
         {
@@ -20,7 +20,7 @@ public sealed class SqliteRoleRepository : IRoleRepository
         }
 
         var ids = rows.Select(r => r.Id).ToList();
-        var ruleLookup = (await _connection.QueryAsync<RuleRow>(
+        var ruleLookup = (await connection.QueryAsync<RuleRow>(
             "SELECT role_id AS RoleId, action_name AS ActionName, resource_key AS ResourceKey FROM permission_rules WHERE role_id IN @ids",
             new { ids })).ToLookup(r => r.RoleId);
 
@@ -29,7 +29,8 @@ public sealed class SqliteRoleRepository : IRoleRepository
 
     public async ValueTask<Option<Role>> FindById(RoleId id)
     {
-        var row = await _connection.QuerySingleOrDefaultAsync<RoleRow>(
+        await using var connection = await _connections.OpenAsync();
+        var row = await connection.QuerySingleOrDefaultAsync<RoleRow>(
             "SELECT id AS Id, name AS Name FROM roles WHERE id = @id",
             new { id = id.Value });
         if (row is null)
@@ -37,7 +38,7 @@ public sealed class SqliteRoleRepository : IRoleRepository
             return Option<Role>.None;
         }
 
-        var rules = (await _connection.QueryAsync<RuleRow>(
+        var rules = (await connection.QueryAsync<RuleRow>(
             "SELECT role_id AS RoleId, action_name AS ActionName, resource_key AS ResourceKey FROM permission_rules WHERE role_id = @id",
             new { id = id.Value })).ToList();
         return Option.Some(ToRole(row, rules));
@@ -45,7 +46,8 @@ public sealed class SqliteRoleRepository : IRoleRepository
 
     public async ValueTask<Option<Role>> FindByName(string name)
     {
-        var row = await _connection.QuerySingleOrDefaultAsync<RoleRow>(
+        await using var connection = await _connections.OpenAsync();
+        var row = await connection.QuerySingleOrDefaultAsync<RoleRow>(
             "SELECT id AS Id, name AS Name FROM roles WHERE name = @name",
             new { name });
         if (row is null)
@@ -53,7 +55,7 @@ public sealed class SqliteRoleRepository : IRoleRepository
             return Option<Role>.None;
         }
 
-        var rules = (await _connection.QueryAsync<RuleRow>(
+        var rules = (await connection.QueryAsync<RuleRow>(
             "SELECT role_id AS RoleId, action_name AS ActionName, resource_key AS ResourceKey FROM permission_rules WHERE role_id = @id",
             new { id = row.Id })).ToList();
         return Option.Some(ToRole(row, rules));
@@ -61,9 +63,10 @@ public sealed class SqliteRoleRepository : IRoleRepository
 
     public async ValueTask<RoleId> NextId()
     {
+        await using var connection = await _connections.OpenAsync();
         if (_nextId < 0)
         {
-            _nextId = await _connection.ExecuteScalarAsync<int>("SELECT COALESCE(MAX(id), 0) FROM roles");
+            _nextId = await connection.ExecuteScalarAsync<int>("SELECT COALESCE(MAX(id), 0) FROM roles");
         }
 
         return new RoleId(++_nextId);
@@ -71,7 +74,8 @@ public sealed class SqliteRoleRepository : IRoleRepository
 
     public async ValueTask Save(Role role)
     {
-        await _connection.ExecuteAsync(
+        await using var connection = await _connections.OpenAsync();
+        await connection.ExecuteAsync(
             """
             INSERT INTO roles (id, name)
             VALUES (@Id, @Name)
@@ -79,13 +83,13 @@ public sealed class SqliteRoleRepository : IRoleRepository
             """,
             new { Id = role.Id.Value, role.Name });
 
-        await _connection.ExecuteAsync(
+        await connection.ExecuteAsync(
             "DELETE FROM permission_rules WHERE role_id = @id",
             new { id = role.Id.Value });
 
         if (role.Rules.Count > 0)
         {
-            await _connection.ExecuteAsync(
+            await connection.ExecuteAsync(
                 "INSERT INTO permission_rules (role_id, action_name, resource_key) VALUES (@RoleId, @ActionName, @ResourceKey)",
                 role.Rules.Select(r => new { RoleId = role.Id.Value, r.ActionName, r.ResourceKey }));
         }
@@ -93,7 +97,8 @@ public sealed class SqliteRoleRepository : IRoleRepository
 
     public async ValueTask Delete(RoleId id)
     {
-        await _connection.ExecuteAsync("DELETE FROM roles WHERE id = @id", new { id = id.Value });
+        await using var connection = await _connections.OpenAsync();
+        await connection.ExecuteAsync("DELETE FROM roles WHERE id = @id", new { id = id.Value });
     }
 
     private static Role ToRole(RoleRow row, IReadOnlyList<RuleRow> rules)

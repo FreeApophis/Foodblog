@@ -6,5 +6,5 @@ public sealed class SqliteArticleRepositoryTests : ArticleRepositoryContract, ID
 
     public void Dispose() => _db.Dispose();
 
-    protected override IArticleRepository CreateRepository() => new SqliteArticleRepository(_db.Connection);
+    protected override IArticleRepository CreateRepository() => new SqliteArticleRepository(_db.Connections);
 }

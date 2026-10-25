@@ -1,25 +1,26 @@
-using System.Data;
 using Dapper;
 
 namespace FunctionalBlog.DataAccess.Sqlite;
 
 public sealed class SqliteIngredientRepository : IIngredientRepository
 {
-    private readonly IDbConnection _connection;
+    private readonly SqliteConnectionFactory _connections;
     private int _nextId = -1;
 
-    public SqliteIngredientRepository(IDbConnection connection) => _connection = connection;
+    public SqliteIngredientRepository(SqliteConnectionFactory connections) => _connections = connections;
 
     public async ValueTask<IReadOnlyList<Ingredient>> All()
     {
-        var rows = await _connection.QueryAsync<IngredientRow>(
+        await using var connection = await _connections.OpenAsync();
+        var rows = await connection.QueryAsync<IngredientRow>(
             "SELECT id AS Id, name AS Name, image AS Image, description AS Description, density AS Density, piece_count AS PieceCount, calorific_value AS CalorificValue, protein AS Protein, fat AS Fat, carbohydrates AS Carbohydrates, sugar AS Sugar, fiber AS Fiber FROM ingredients ORDER BY name COLLATE NOCASE");
         return rows.Select(ToIngredient).ToList();
     }
 
     public async ValueTask<Option<Ingredient>> Find(IngredientId id)
     {
-        var row = await _connection.QuerySingleOrDefaultAsync<IngredientRow>(
+        await using var connection = await _connections.OpenAsync();
+        var row = await connection.QuerySingleOrDefaultAsync<IngredientRow>(
             "SELECT id AS Id, name AS Name, image AS Image, description AS Description, density AS Density, piece_count AS PieceCount, calorific_value AS CalorificValue, protein AS Protein, fat AS Fat, carbohydrates AS Carbohydrates, sugar AS Sugar, fiber AS Fiber FROM ingredients WHERE id = @id",
             new { id = id.Value });
 
@@ -28,9 +29,10 @@ public sealed class SqliteIngredientRepository : IIngredientRepository
 
     public async ValueTask<IngredientId> NextId()
     {
+        await using var connection = await _connections.OpenAsync();
         if (_nextId < 0)
         {
-            _nextId = await _connection.ExecuteScalarAsync<int>("SELECT COALESCE(MAX(id), 0) FROM ingredients");
+            _nextId = await connection.ExecuteScalarAsync<int>("SELECT COALESCE(MAX(id), 0) FROM ingredients");
         }
 
         return new IngredientId(++_nextId);
@@ -38,7 +40,8 @@ public sealed class SqliteIngredientRepository : IIngredientRepository
 
     public async ValueTask Save(Ingredient ingredient)
     {
-        await _connection.ExecuteAsync(
+        await using var connection = await _connections.OpenAsync();
+        await connection.ExecuteAsync(
             """
             INSERT OR REPLACE INTO ingredients (id, name, image, description, density, piece_count, calorific_value, protein, fat, carbohydrates, sugar, fiber)
             VALUES (@Id, @Name, @Image, @Description, @Density, @PieceCount, @CalorificValue, @Protein, @Fat, @Carbohydrates, @Sugar, @Fiber)
@@ -62,7 +65,8 @@ public sealed class SqliteIngredientRepository : IIngredientRepository
 
     public async ValueTask Delete(IngredientId id)
     {
-        await _connection.ExecuteAsync("DELETE FROM ingredients WHERE id = @id", new { id = id.Value });
+        await using var connection = await _connections.OpenAsync();
+        await connection.ExecuteAsync("DELETE FROM ingredients WHERE id = @id", new { id = id.Value });
     }
 
     private static Ingredient ToIngredient(IngredientRow row) =>

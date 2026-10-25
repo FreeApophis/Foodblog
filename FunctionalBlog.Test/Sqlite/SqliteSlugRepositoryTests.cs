@@ -6,5 +6,5 @@ public sealed class SqliteSlugRepositoryTests : Test.Slugs.SlugRepositoryContrac
 
     public void Dispose() => _db.Dispose();
 
-    protected override ISlugRepository Create() => new SqliteSlugRepository(_db.Connection);
+    protected override ISlugRepository Create() => new SqliteSlugRepository(_db.Connections);
 }

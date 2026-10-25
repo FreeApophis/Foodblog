@@ -1,24 +1,25 @@
-using System.Data;
 using Dapper;
 
 namespace FunctionalBlog.DataAccess.Sqlite;
 
 public sealed class SqliteTranslationRepository : ITranslationRepository
 {
-    private readonly IDbConnection _connection;
+    private readonly SqliteConnectionFactory _connections;
 
-    public SqliteTranslationRepository(IDbConnection connection) => _connection = connection;
+    public SqliteTranslationRepository(SqliteConnectionFactory connections) => _connections = connections;
 
     public async ValueTask<IReadOnlyList<Translation>> All()
     {
-        var rows = await _connection.QueryAsync<TranslationRow>(
+        await using var connection = await _connections.OpenAsync();
+        var rows = await connection.QueryAsync<TranslationRow>(
             "SELECT key, language, variant, text FROM translations");
         return rows.Select(ToTranslation).ToList();
     }
 
     public async ValueTask Save(string key, string language, string? variant, string text)
     {
-        await _connection.ExecuteAsync(
+        await using var connection = await _connections.OpenAsync();
+        await connection.ExecuteAsync(
             """
             INSERT INTO translations (key, language, variant, text)
             VALUES (@Key, @Language, @Variant, @Text)

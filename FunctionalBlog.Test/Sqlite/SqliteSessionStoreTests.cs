@@ -6,5 +6,5 @@ public sealed class SqliteSessionStoreTests : SessionStoreContract, IDisposable
 
     public void Dispose() => _db.Dispose();
 
-    protected override ISessionStore CreateStore() => new SqliteSessionStore(_db.Connection);
+    protected override ISessionStore CreateStore() => new SqliteSessionStore(_db.Connections);
 }

@@ -45,6 +45,8 @@ internal class Program
             FocalMiddleware.Create(),
             Router.Create(Routes.Build()));
 
+        web.UseForwardedHeaders(ReverseProxy.Options());
+
         web.Run(async http =>
         {
             var request = await HttpAdapter.ToRequest(http);

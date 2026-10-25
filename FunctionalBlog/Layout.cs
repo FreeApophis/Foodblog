@@ -20,6 +20,7 @@ public static class Layout
             <script src="/confirm-delete.js" defer></script>
             <script src="/autofocus-swap.js" defer></script>
             <script src="/focal-point.js" defer></script>
+            <script src="/select-on-click.js" defer></script>
         </head>
         <body>
             {{NavViews.UtilityBar(ctx)}}

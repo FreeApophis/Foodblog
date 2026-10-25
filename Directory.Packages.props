@@ -12,19 +12,19 @@
     <PackageVersion Include="Funcky.DiscriminatedUnion" Version="1.2.1" />
   </ItemGroup>
   <ItemGroup Label="Pdf">
-    <PackageVersion Include="QuestPDF" Version="2026.6.0" />
-    <PackageVersion Include="SkiaSharp" Version="3.119.4" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.119.4" />
+    <PackageVersion Include="QuestPDF" Version="2026.9.1" />
+    <PackageVersion Include="SkiaSharp" Version="4.153.1" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="4.153.1" />
   </ItemGroup>
   <ItemGroup Label="Email">
     <PackageVersion Include="MailKit" Version="4.18.2" />
   </ItemGroup>
   <ItemGroup Label="Search">
-    <PackageVersion Include="LeanCorpus" Version="1.4.2" />
+    <PackageVersion Include="LeanCorpus" Version="3.1.1" />
   </ItemGroup>
   <ItemGroup Label="DataAccess">
-    <PackageVersion Include="Dapper" Version="2.1.79" />
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.8" />
+    <PackageVersion Include="Dapper" Version="2.1.89" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.14" />
     <PackageVersion Include="dbup-sqlite" Version="6.0.4" />
     <!-- Force the native SQLite binary above the vulnerable 2.1.11 (GHSA-2m69-gcr7-jv3q) that
          Microsoft.Data.Sqlite pulls in transitively. lib.e_sqlite3 is versioned to track the
@@ -33,10 +33,10 @@
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.50.3" />
   </ItemGroup>
   <ItemGroup Label="Testing">
-    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
+    <PackageVersion Include="coverlet.collector" Version="10.1.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0-pre.4" />
-    <PackageVersion Include="Funcky.XUnit" Version="2.1.1" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
+    <PackageVersion Include="Funcky.XUnit" Version="2.2.0" />
   </ItemGroup>
 </Project>

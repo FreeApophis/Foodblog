@@ -74,7 +74,7 @@ public static class AdminDashboardViews
             </div>
             """);
 
-        return Layout.Page(t("admin.dashboard.title"), head + StatsStrip(stats, principal, t) + Attention(stats, principal, t) + grid, ctx);
+        return Layout.Page(t("admin.dashboard.title"), head + StatsStrip(stats, principal, t) + SiteUrlWarning(stats, principal, t) + Attention(stats, principal, t) + grid, ctx);
     }
 
     // True when the principal can reach at least one admin section — used by the nav to decide
@@ -102,6 +102,23 @@ public static class AdminDashboardViews
                 <span class="stat-label">{Html.Encode(t(def.LabelKey))}</span>
             </a>
             """);
+
+    // Shown to settings managers while site.url is unset/invalid: password-reset and verification
+    // mails are not sent until it is fixed.
+    private static HtmlString SiteUrlWarning(DashboardStats stats, IPrincipal principal, Translate t)
+    {
+        if (!stats.SiteUrlMissing || !principal.Can<Manage>(new SettingsResource()))
+        {
+            return Html.Raw(string.Empty);
+        }
+
+        return Html.Raw($"""
+            <a class="attention" href="/admin/settings">
+                <span class="warn-badge">{WarnIcon}</span>
+                {Html.Encode(t("admin.dashboard.attention.site_url_missing"))}
+            </a>
+            """);
+    }
 
     // A "needs attention" notice for ingredients still missing information, shown only to users who
     // can act on it (manage ingredients) and only when there is something to fix.

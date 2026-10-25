@@ -4,7 +4,8 @@ public sealed class ContentSecurityPolicyTests
 {
     private const string ExpectedPolicy =
         "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; " +
-        "font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'";
+        "font-src 'self'; connect-src 'self'; frame-src https://www.instagram.com; object-src 'none'; base-uri 'self'; " +
+        "form-action 'self'; frame-ancestors 'self'";
 
     [Fact]
     public async Task Html_responses_carry_the_policy()

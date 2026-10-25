@@ -227,8 +227,37 @@ public static class BlogViews
             ? $"""<section class="sidebar-card"><h4 class="sidebar-head">{Html.Encode(t("blog.sidebar.popular_tags"))}</h4><div class="sidebar-tags">{string.Concat(tags)}</div></section>"""
             : string.Empty;
 
-        return recentCard + tagsCard;
+        return recentCard + InstagramCard(t) + tagsCard;
     }
+
+    // Two-click embed: the page itself loads nothing from Instagram. Only after the visitor agrees
+    // does instagram-consent.js swap the placeholder for Instagram's profile iframe; without JS the
+    // plain outbound link remains.
+    private static string InstagramCard(Translate t) =>
+        $"""
+        <section class="sidebar-card">
+            <h4 class="sidebar-head">{Html.Encode(t("blog.sidebar.instagram"))}</h4>
+            <a class="sidebar-instagram" href="https://www.instagram.com/{InstagramHandle}/" target="_blank" rel="noopener noreferrer">
+                {InstagramIcon}
+                <span class="sidebar-instagram-text">
+                    <span class="sidebar-instagram-handle">@{Html.Encode(InstagramHandle)}</span>
+                    <span class="sidebar-instagram-cta">{Html.Encode(t("blog.sidebar.instagram_cta"))}</span>
+                </span>
+            </a>
+            <div class="instagram-embed" data-instagram-embed="https://www.instagram.com/{InstagramHandle}/embed/" data-instagram-title="{Html.Encode(t("blog.sidebar.instagram_frame_title"))}" data-instagram-hide-label="{Html.Encode(t("blog.sidebar.instagram_hide"))}">
+                <div class="instagram-consent">
+                    <p class="sidebar-instagram-note">{Html.Encode(t("blog.sidebar.instagram_consent"))}</p>
+                    <button type="button" class="instagram-load" data-instagram-load>{Html.Encode(t("blog.sidebar.instagram_load"))}</button>
+                    <label class="instagram-remember"><input type="checkbox" data-instagram-remember /> {Html.Encode(t("blog.sidebar.instagram_remember"))}</label>
+                </div>
+            </div>
+        </section>
+        """;
+
+    private const string InstagramHandle = "the_cooking.couple_";
+
+    private const string InstagramIcon =
+        """<svg class="sidebar-instagram-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>""";
 
     private const string PencilIcon =
         """<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>""";

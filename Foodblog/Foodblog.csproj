@@ -19,6 +19,8 @@
 		<EmbeddedResource Include="wwwroot\focal-point.js" />
 		<Content Remove="wwwroot\select-on-click.js" />
 		<EmbeddedResource Include="wwwroot\select-on-click.js" />
+		<Content Remove="wwwroot\instagram-consent.js" />
+		<EmbeddedResource Include="wwwroot\instagram-consent.js" />
 		<Content Remove="wwwroot\fonts\*.woff2" />
 		<EmbeddedResource Include="wwwroot\fonts\*.woff2" />
 		<Content Remove="wwwroot\fonts\*.ttf" />

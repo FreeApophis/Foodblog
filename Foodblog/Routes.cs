@@ -13,6 +13,7 @@ public static class Routes
         .Get("/autofocus-swap.js", StaticHandlers.AutofocusSwapScript)
         .Get("/focal-point.js", StaticHandlers.FocalPointScript)
         .Get("/select-on-click.js", StaticHandlers.SelectOnClickScript)
+        .Get("/instagram-consent.js", StaticHandlers.InstagramConsentScript)
         .Get("/favicon.ico", StaticHandlers.FaviconIco)
         .Get("/favicon.png", StaticHandlers.FaviconPng)
         .Get("/fonts/{file}", p => StaticHandlers.Font(p[0]))

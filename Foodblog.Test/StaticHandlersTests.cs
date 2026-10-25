@@ -28,6 +28,16 @@ public sealed class StaticHandlersTests
     }
 
     [Fact]
+    public async Task InstagramConsentScript_serves_the_embedded_script()
+    {
+        var response = await StaticHandlers.InstagramConsentScript(Request())(Env());
+
+        Assert.Equal(200, response.Status);
+        Assert.StartsWith("application/javascript", response.ContentType);
+        Assert.Contains("data-instagram-embed", response.Body);
+    }
+
+    [Fact]
     public async Task Font_returns_404_for_an_unknown_file()
     {
         var response = await StaticHandlers.Font("../secret.txt")(Request())(Env());

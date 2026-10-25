@@ -11,6 +11,7 @@ public static class StaticHandlers
     private static readonly Lazy<string> AutofocusSwapContent = new(LoadAutofocusSwap);
     private static readonly Lazy<string> FocalPointContent = new(LoadFocalPoint);
     private static readonly Lazy<string> SelectOnClickContent = new(LoadSelectOnClick);
+    private static readonly Lazy<string> InstagramConsentContent = new(LoadInstagramConsent);
     private static readonly ConcurrentDictionary<string, byte[]> BinaryCache = new();
 
     // Self-hosted design fonts (latin subset, variable weight). Whitelist of servable files.
@@ -51,6 +52,9 @@ public static class StaticHandlers
 
     public static App SelectOnClickScript => _ => _ =>
         ValueTask.FromResult(Response.Js(SelectOnClickContent.Value));
+
+    public static App InstagramConsentScript => _ => _ =>
+        ValueTask.FromResult(Response.Js(InstagramConsentContent.Value));
 
     public static App FaviconIco => _ => _ =>
         ValueTask.FromResult(Response.Bytes(
@@ -117,6 +121,12 @@ public static class StaticHandlers
     private static string LoadSelectOnClick()
     {
         const string resourceName = "Foodblog.wwwroot.select-on-click.js";
+        return LoadResource(resourceName);
+    }
+
+    private static string LoadInstagramConsent()
+    {
+        const string resourceName = "Foodblog.wwwroot.instagram-consent.js";
         return LoadResource(resourceName);
     }
 

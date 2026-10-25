@@ -22,7 +22,7 @@ public static class CsrfMiddleware
         var response = await next(request)(env with { CsrfToken = token });
 
         return isNewToken
-            ? response.WithCookie($"{TokenName}={token}; Path=/; HttpOnly; SameSite=Strict")
+            ? response.WithCookie(new Cookie(TokenName, token, CookieSameSite.Strict, HttpOnly: true))
             : response;
     };
 

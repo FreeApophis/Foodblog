@@ -51,6 +51,6 @@ public static class TranslationHandlers
         var referer = request.Headers.GetValueOrDefault("Referer", "/");
         return ValueTask.FromResult(
             Response.Redirect(referer)
-                .WithCookie($"lang={safe}; Path=/; SameSite=Lax"));
+                .WithCookie(new Cookie("lang", safe, CookieSameSite.Lax)));
     };
 }

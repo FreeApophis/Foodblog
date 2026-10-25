@@ -10,8 +10,8 @@ public sealed record Response(
 
     public byte[]? Binary { get; init; }
 
-    public Response WithCookie(string cookieHeader) =>
-        this with { SetCookies = [..SetCookies, cookieHeader] };
+    public Response WithCookie(Cookie cookie) =>
+        this with { SetCookies = [..SetCookies, cookie.ToHeader()] };
 
     public static Response Html(string body, int status = 200) =>
         new(status, "text/html; charset=utf-8", EmptyHeaders, body);

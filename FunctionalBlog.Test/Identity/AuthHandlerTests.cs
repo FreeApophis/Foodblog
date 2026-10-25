@@ -82,6 +82,7 @@ public sealed class AuthHandlerTests
         Assert.Equal(303, login.Status);
         Assert.Equal("/", login.Headers["Location"]);
         Assert.NotEmpty(login.SetCookies);
+        Assert.All(login.SetCookies, c => Assert.EndsWith("; Secure", c));
     }
 
     [Fact]
@@ -137,6 +138,7 @@ public sealed class AuthHandlerTests
         Assert.Equal(303, response.Status);
         Assert.NotEmpty(response.SetCookies);
         Assert.Contains("Max-Age=0", response.SetCookies[0]);
+        Assert.All(response.SetCookies, c => Assert.EndsWith("; Secure", c));
         FunctionalAssert.None(await env.Sessions.Find(token));
     }
 

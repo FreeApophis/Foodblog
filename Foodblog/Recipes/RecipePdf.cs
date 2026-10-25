@@ -58,7 +58,7 @@ public static class RecipePdf
                 using var stream = assembly.GetManifestResourceStream(resource);
                 if (stream is not null)
                 {
-                    FontManager.RegisterFont(stream);
+                    FontManager.RegisterFontFromStream(stream);
                 }
             }
         }

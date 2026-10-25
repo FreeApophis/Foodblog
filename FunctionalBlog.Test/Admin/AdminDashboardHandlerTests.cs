@@ -84,6 +84,37 @@ public sealed class AdminDashboardHandlerTests
     }
 
     [Fact]
+    public async Task Dashboard_warns_when_the_site_url_is_not_set()
+    {
+        var env = BuildEnv(FullAdmin(), siteUrl: string.Empty);
+
+        var response = await AdminDashboardHandlers.Dashboard(ARequest())(env);
+
+        Assert.Contains("admin.dashboard.attention.site_url_missing", response.Body);
+        Assert.Contains("href=\"/admin/settings\"", response.Body);
+    }
+
+    [Fact]
+    public async Task Dashboard_does_not_warn_when_the_site_url_is_set()
+    {
+        var env = BuildEnv(FullAdmin(), siteUrl: "https://foodblog.ch");
+
+        var response = await AdminDashboardHandlers.Dashboard(ARequest())(env);
+
+        Assert.DoesNotContain("admin.dashboard.attention.site_url_missing", response.Body);
+    }
+
+    [Fact]
+    public async Task Dashboard_hides_the_site_url_warning_from_users_who_cannot_manage_settings()
+    {
+        var env = BuildEnv(UnitOnlyAdmin(), siteUrl: string.Empty);
+
+        var response = await AdminDashboardHandlers.Dashboard(ARequest())(env);
+
+        Assert.DoesNotContain("admin.dashboard.attention.site_url_missing", response.Body);
+    }
+
+    [Fact]
     public async Task Dashboard_has_no_attention_notice_when_no_ingredients_are_incomplete()
     {
         var env = BuildEnv(FullAdmin());
@@ -104,6 +135,7 @@ public sealed class AdminDashboardHandlerTests
             new PermissionRule("Manage", "image"),
             new PermissionRule("Create", "page"),
             new PermissionRule("Create", "article"),
+            new PermissionRule("Manage", "settings"),
         };
         var role = new Role(new RoleId(1), "Admin", rules);
         var user = User.Create(new UserId(1), new Email("admin@blog.de"), new DisplayName("Admin"), "hash", ["Admin"], DateTimeOffset.UtcNow);
@@ -117,7 +149,7 @@ public sealed class AdminDashboardHandlerTests
         return new AuthenticatedUser(user, [role]);
     }
 
-    private static Env BuildEnv(IPrincipal principal, IIngredientRepository? ingredients = null) => new(
+    private static Env BuildEnv(IPrincipal principal, IIngredientRepository? ingredients = null, string siteUrl = "https://foodblog.ch") => new(
         Articles: new InMemoryArticleRepository(),
         Users: new InMemoryUserRepository(),
         Roles: new InMemoryRoleRepository(),
@@ -131,7 +163,8 @@ public sealed class AdminDashboardHandlerTests
         Ingredients: ingredients ?? new InMemoryIngredientRepository(),
         Units: new InMemoryUnitRepository(),
         Images: new InMemoryImageRepository(),
-        Pages: new InMemoryPageRepository());
+        Pages: new InMemoryPageRepository(),
+        Config: TestConfiguration.With((ConfigurationKeys.SiteUrl, siteUrl)));
 
     private static Request ARequest() =>
         new(HttpMethod.Get, "/admin", Empty, Empty, Empty, Empty);

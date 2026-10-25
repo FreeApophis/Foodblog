@@ -15,7 +15,8 @@ public static class AdminDashboardHandlers
             Pages: (await env.Pages.All()).Count,
             Images: (await env.Images.List()).Count,
             Users: (await env.Users.All()).Count,
-            IncompleteIngredients: ingredients.Count(i => i.HasMissingInformation));
+            IncompleteIngredients: ingredients.Count(i => i.HasMissingInformation),
+            SiteUrlMissing: Option.FromNullable(env.Config).SelectMany(config => config.PublicBaseUrl) is []);
 
         return Response.Html(AdminDashboardViews.Dashboard(stats, env.Ctx));
     };

@@ -25,6 +25,9 @@ public sealed class ConfigurationCache
 
     public string SiteUrl => Get(ConfigurationKeys.SiteUrl);
 
+    // SiteUrl when it is a valid absolute https:// URL; None when unset or invalid.
+    public Option<string> PublicBaseUrl => Configuration.SiteUrl.ParseOrNone(SiteUrl);
+
     public SmtpSettings Smtp => new(
         Host: Get(ConfigurationKeys.SmtpHost),
         Port: int.TryParse(Get(ConfigurationKeys.SmtpPort), out var port) ? port : 587,

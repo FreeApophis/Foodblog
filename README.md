@@ -63,6 +63,16 @@ Earlier releases created `admin@blog.de` with the public password `Admin1234`. O
 account still has that password, it is locked: its password is replaced with an unknown random one and
 its sessions are ended. The account and its content are kept, and a warning is logged.
 
+**Email.** Set the SMTP server and the **base URL** under *Administration → Einstellungen*. Password
+reset and verification mails link to the base URL, which must be an absolute `https://` address (it is
+never taken from the request's Host header). Until it is set, those mails are not sent, an error is
+logged, and the admin dashboard shows a warning. With "SSL" enabled, TLS is required: implicit TLS on
+port 465, mandatory STARTTLS on any other port.
+
+**HTTPS only.** Every cookie is `Secure` and HTML responses carry a Content-Security-Policy, so serve
+the site over HTTPS (directly or behind a reverse proxy). Browsers accept `Secure` cookies on
+`http://localhost`, so local development on the HTTP port still works.
+
 Data lives under `./data` by default (database, full-text index, config). Override the location with
 the `DATA_DIR` environment variable.
 

@@ -12,7 +12,7 @@ public static class ArticleSeo
         var url = $"{baseUrl}/articles/{slug ?? article.Id.Value.ToString()}";
         var description = Seo.PlainTextSnippet(article.Teaser.Value);
         var imageUrl = article.CoverImageId.Match(
-            none: () => string.Empty,
+            none: string.Empty,
             some: id => Seo.Absolute(baseUrl, $"/images/{id.Value}"));
 
         var data = new Dictionary<string, object?>

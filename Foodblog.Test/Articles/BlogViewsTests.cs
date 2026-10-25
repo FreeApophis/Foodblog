@@ -2,7 +2,7 @@ namespace Foodblog.Test.Articles;
 
 public sealed class BlogViewsTests
 {
-    private static readonly Translate NoOp = key => key;
+    private static readonly Translate NoOp = Functional.Identity;
 
     [Fact]
     public void Show_renders_the_author_with_an_avatar_in_a_meta_row()

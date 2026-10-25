@@ -72,7 +72,7 @@ public static class AuthHandlers
             success: async s =>
             {
                 var userOption = await env.Users.FindByEmail(s.Value.Email);
-                var hashToVerify = userOption.Match(none: () => DummyHash, some: u => u.PasswordHash);
+                var hashToVerify = userOption.Match(none: DummyHash, some: u => u.PasswordHash);
                 var passwordMatch = env.PasswordHasher.Verify(s.Value.Password, hashToVerify);
 
                 if (userOption is not [var user] || !passwordMatch)

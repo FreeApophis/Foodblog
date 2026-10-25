@@ -42,7 +42,7 @@ public sealed class ThemeHandlerTests
     [Fact]
     public void Layout_renders_the_active_theme_on_the_html_element()
     {
-        var ctx = new ViewContext(Guest.Instance, key => key, string.Empty, "dark");
+        var ctx = new ViewContext(Guest.Instance, Functional.Identity, string.Empty, "dark");
 
         var html = Layout.Page("Titel", Html.Raw("<p>x</p>"), ctx);
 

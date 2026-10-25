@@ -32,13 +32,6 @@ public static class RecipeHandlers
                 return Response.Html(RecipeViews.Show(recipe, authorName, ingredients, displayPortions, env.Ctx, request.BaseUrl, authorAvatar));
             });
 
-    // The detail page can be re-scaled to a different serving count via ?portions=N. Any positive
-    // integer is accepted; an absent or invalid value falls back to the recipe's stored portions.
-    private static int RequestedPortions(Request request, int fallback) =>
-        request.Query.GetValueOrNone("portions")
-            .Select(raw => int.TryParse(raw, out var n) && n >= 1 ? n : fallback)
-            .GetOrElse(fallback);
-
     public static App NewRecipeForm => _ => async env =>
         Response.Html(RecipeViews.Form(
             errors: [],
@@ -406,6 +399,13 @@ public static class RecipeHandlers
                 return Response.Redirect($"/recipes/{slug}");
             });
     };
+
+    // The detail page can be re-scaled to a different serving count via ?portions=N. Any positive
+    // integer is accepted; an absent or invalid value falls back to the recipe's stored portions.
+    private static int RequestedPortions(Request request, int fallback) =>
+        request.Query.GetValueOrNone("portions")
+            .Select(raw => int.TryParse(raw, out var n) && n >= 1 ? n : fallback)
+            .GetOrElse(fallback);
 
     // Registers a slug for each of the recipe's tags so /tag/{slug} links resolve immediately after a
     // save (the tag rows were just upserted by the repository). No-op when there is no tag store.

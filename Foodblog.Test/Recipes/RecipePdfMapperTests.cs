@@ -2,7 +2,7 @@ namespace Foodblog.Test.Recipes;
 
 public sealed class RecipePdfMapperTests
 {
-    private static readonly Translate Echo = key => key;
+    private static readonly Translate Echo = Functional.Identity;
 
     [Fact]
     public void Create_keeps_base_amounts_for_the_base_portions()

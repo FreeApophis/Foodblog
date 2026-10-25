@@ -11,7 +11,7 @@ public sealed class ResourcesTests
         var reflected = typeof(IResource).Assembly.GetTypes()
             .Where(type => typeof(IResource).IsAssignableFrom(type) && type is { IsInterface: false, IsAbstract: false })
             .Select(type => ((IResource)Activator.CreateInstance(type)!).ResourceKey)
-            .OrderBy(key => key, StringComparer.Ordinal)
+            .OrderBy(Functional.Identity, StringComparer.Ordinal)
             .ToList();
 
         Assert.Equal(reflected, Resources.AllKeys);

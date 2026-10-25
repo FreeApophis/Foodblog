@@ -93,7 +93,7 @@ public static class BlogViews
             Html.Raw("</div>");
 
         var cover = article.CoverImageId.Match(
-            none: () => HtmlString.Empty,
+            none: HtmlString.Empty,
             some: imageId => Html.Div("cover", Html.Img($"/images/{imageId.Value}", article.Title.Value, cssClass: "cover-image", style: ctx.FocalStyle($"/images/{imageId.Value}"))));
 
         var body = breadcrumb +
@@ -183,7 +183,7 @@ public static class BlogViews
     private static string Media(Article a, ViewContext ctx)
     {
         var img = a.CoverImageId.Match(
-            none: () => string.Empty,
+            none: string.Empty,
             some: id => $"""<img src="/images/{id.Value}" alt="{Html.Encode(a.Title.Value)}"{ctx.FocalStyle($"/images/{id.Value}")} />""");
         return $"""<div class="blog-media">{img}{DateBadge(a)}</div>""";
     }

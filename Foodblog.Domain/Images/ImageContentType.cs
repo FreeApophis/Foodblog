@@ -13,12 +13,16 @@ public sealed record ImageContentType
 
     // Sniffs the leading "magic" bytes so we trust the actual content over a
     // client-supplied content-type header. Returns None for anything we don't accept.
-    public static Option<ImageContentType> Detect(byte[] bytes) =>
-        StartsWith(bytes, 0xFF, 0xD8, 0xFF) ? Option.Some(Jpeg)
-        : StartsWith(bytes, 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A) ? Option.Some(Png)
-        : StartsWith(bytes, 0x47, 0x49, 0x46, 0x38) ? Option.Some(Gif)
-        : IsWebp(bytes) ? Option.Some(Webp)
-        : Option<ImageContentType>.None;
+    public static Option<ImageContentType> Detect(byte[] bytes)
+        => StartsWith(bytes, 0xFF, 0xD8, 0xFF)
+            ? Option.Some(Jpeg)
+            : StartsWith(bytes, 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
+                ? Option.Some(Png)
+                : StartsWith(bytes, 0x47, 0x49, 0x46, 0x38)
+                    ? Option.Some(Gif)
+                    : IsWebp(bytes)
+                        ? Option.Some(Webp)
+                        : Option<ImageContentType>.None;
 
     public static Option<ImageContentType> ParseOrNone(string raw) =>
         new[] { Jpeg, Png, Gif, Webp }.FirstOrNone(t => t.Value == raw);

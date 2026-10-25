@@ -62,7 +62,7 @@ public sealed class ImageUsageTests
 
         var referenced = ImageUsage.ReferencedIds(articles, pages, recipes, ingredients, users);
 
-        Assert.Equal(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }, referenced.OrderBy(i => i));
+        Assert.Equal([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], referenced.OrderBy(Functional.Identity));
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public sealed class ImageUsageTests
 
         var orphans = ImageUsage.Orphans(library, referenced);
 
-        Assert.Equal(new[] { 99 }, orphans.Select(o => o.Id.Value));
+        Assert.Equal([99], orphans.Select(o => o.Id.Value));
     }
 
     private static ImageSummary Summary(int id) =>

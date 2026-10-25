@@ -171,12 +171,13 @@ public static class RecipePdf
             // bottom (mirrors the design's gradient) — carrying the title so it stays legible. The
             // gradient is the background of this layer (behind the text), not a separate empty layer.
             layers.Layer()
-                .BackgroundLinearGradient(90f, new[]
-                {
+                .BackgroundLinearGradient(
+                90f,
+                [
                     Color.FromHex("#0D140F0A"),
                     Color.FromHex("#26140F0A"),
                     Color.FromHex("#B3140F0A"),
-                })
+                ])
                 .PaddingHorizontal(28).PaddingBottom(28).AlignBottom().Column(c =>
                 {
                     c.Item().Text(model.Eyebrow).FontFamily(Mono).FontSize(8).FontColor(Sand).LetterSpacing(0.16f);

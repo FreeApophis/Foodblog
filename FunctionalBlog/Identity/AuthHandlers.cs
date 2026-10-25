@@ -125,8 +125,7 @@ public static class AuthHandlers
                 var token = GenerateToken();
                 var resetToken = new PasswordResetToken(token, user.Id, env.Clock.Now.AddHours(1), Consumed: false);
                 await env.PasswordResets.Save(resetToken);
-                var link = $"{BaseUrl(env)}/password-reset/confirm?token={token}";
-                await TrySend(env, decoded.EmailRaw, env.T("auth.email.reset_subject"), env.T("auth.email.reset_body") + "\n\n" + link);
+                await TrySendWithLink(env, decoded.EmailRaw, "auth.email.reset_subject", "auth.email.reset_body", $"/password-reset/confirm?token={token}");
             });
 
         return Response.Html(AuthViews.PasswordResetRequested(env.Ctx));
@@ -188,8 +187,23 @@ public static class AuthHandlers
 
         var token = GenerateToken();
         await env.EmailVerifications.Save(new EmailVerificationToken(token, user.Id, env.Clock.Now.AddHours(24), Consumed: false));
-        var link = $"{BaseUrl(env)}/verify-email?token={token}";
-        await TrySend(env, user.Email.Value, env.T("auth.email.verify_subject"), env.T("auth.email.verify_body") + "\n\n" + link);
+        await TrySendWithLink(env, user.Email.Value, "auth.email.verify_subject", "auth.email.verify_body", $"/verify-email?token={token}");
+    }
+
+    // Sends a mail whose body ends with an absolute link built from the configured site.url. Without
+    // a valid site.url the link would be relative and unusable, so nothing is sent and the problem
+    // is logged (the admin dashboard also warns about it). The request's Host header is never used.
+    private static async Task TrySendWithLink(Env env, string to, string subjectKey, string bodyKey, string pathAndQuery)
+    {
+        if (Option.FromNullable(env.Config).SelectMany(config => config.PublicBaseUrl) is not [var baseUrl])
+        {
+            env.Log.Error(new InvalidOperationException(
+                $"E-Mail an {to} nicht gesendet: site.url ist nicht gesetzt oder keine absolute https://-URL. " +
+                "Bitte unter /admin/settings die Basis-URL eintragen."));
+            return;
+        }
+
+        await TrySend(env, to, env.T(subjectKey), env.T(bodyKey) + "\n\n" + baseUrl + pathAndQuery);
     }
 
     // Best-effort transactional send: a mail failure is logged, never surfaced to the user, so a
@@ -210,10 +224,6 @@ public static class AuthHandlers
             env.Log.Error(exception);
         }
     }
-
-    // The configured public base URL, used to build absolute links in emails. Empty when unset,
-    // yielding a relative link the admin can fix by setting site.url.
-    private static string BaseUrl(Env env) => (env.Config?.SiteUrl ?? string.Empty).TrimEnd('/');
 
     public static App NewPasswordResetConfirmForm => request => env =>
     {

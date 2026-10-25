@@ -8,6 +8,6 @@ public static class ThemeHandlers
         var referer = request.Headers.GetValueOrDefault("Referer", "/");
         return ValueTask.FromResult(
             Response.Redirect(referer)
-                .WithCookie($"theme={theme}; Path=/; SameSite=Lax"));
+                .WithCookie(new Cookie("theme", theme, CookieSameSite.Lax)));
     };
 }

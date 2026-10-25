@@ -2,9 +2,9 @@ namespace FunctionalBlog.Identity;
 
 public static class CookieHelper
 {
-    public static string SessionCookie(string token, DateTimeOffset expires) =>
-        $"session={token}; HttpOnly; SameSite=Strict; Path=/; Expires={expires:R}; Secure";
+    public static Cookie SessionCookie(string token, DateTimeOffset expires) =>
+        new Cookie("session", token, CookieSameSite.Strict, HttpOnly: true) { Expires = Option.Some(expires) };
 
-    public static string ExpireSessionCookie() =>
-        "session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0";
+    public static Cookie ExpireSessionCookie() =>
+        new Cookie("session", string.Empty, CookieSameSite.Strict, HttpOnly: true).Expired();
 }

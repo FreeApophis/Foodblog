@@ -66,6 +66,7 @@ public class CsrfMiddlewareTests
         var response = await app(request)(BuildEnv());
 
         Assert.Contains(response.SetCookies, c => c.StartsWith("_csrf="));
+        Assert.All(response.SetCookies, c => Assert.EndsWith("; Secure", c));
     }
 
     [Fact]

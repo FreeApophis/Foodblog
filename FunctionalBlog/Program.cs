@@ -35,6 +35,7 @@ internal class Program
 
         App app = Functional.Compose(
             _ => env => ValueTask.FromResult(Response.NotFound(env.Ctx)),
+            ContentSecurityPolicy.Create(),
             LanguageMiddleware.Create(),
             ThemeMiddleware.Create(),
             Middlewares.Recover,

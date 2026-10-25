@@ -47,6 +47,31 @@ public sealed class SettingsFormTests
         ValidatedAssert.IsSuccess(SettingsForm.Decode(Request(fromAddress: string.Empty)));
     }
 
+    [Theory]
+    [InlineData("foodblog.ch")]
+    [InlineData("http://foodblog.ch")]
+    [InlineData("/relative")]
+    public void A_site_url_that_is_not_absolute_https_fails(string siteUrl)
+    {
+        Assert.Contains("settings.error.site_url_invalid", ValidatedAssert.IsFailure(SettingsForm.Decode(Request(siteUrl: siteUrl))));
+    }
+
+    [Fact]
+    public void A_site_url_is_stored_without_a_trailing_slash()
+    {
+        var form = ValidatedAssert.IsSuccess(SettingsForm.Decode(Request(siteUrl: "https://foodblog.ch/")));
+
+        Assert.Equal("https://foodblog.ch", form.SiteUrl);
+    }
+
+    [Fact]
+    public void A_blank_site_url_is_allowed()
+    {
+        var form = ValidatedAssert.IsSuccess(SettingsForm.Decode(Request(siteUrl: string.Empty)));
+
+        Assert.Equal(string.Empty, form.SiteUrl);
+    }
+
     [Fact]
     public void An_unchecked_ssl_box_decodes_to_false()
     {

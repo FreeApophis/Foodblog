@@ -46,7 +46,7 @@ public static class ImageViews
             confirm: t("common.confirm_delete"));
 
         var snippet = $"[img]{url}[/img]";
-        var embedField = Html.Raw($"""<input class="embed-snippet" type="text" value="{Html.Encode(snippet)}" readonly onclick="this.select()" />""");
+        var embedField = Html.Raw($"""<input class="embed-snippet" type="text" value="{Html.Encode(snippet)}" readonly data-select-on-click />""");
 
         var cardBody = FocalEditor(image, url, ctx, csrfToken) +
             Html.Small(image.FileName) +

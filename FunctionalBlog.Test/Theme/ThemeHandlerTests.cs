@@ -18,6 +18,7 @@ public sealed class ThemeHandlerTests
         Assert.Equal(303, response.Status);
         Assert.Equal("/recipes/3", response.Headers["Location"]);
         Assert.Contains(response.SetCookies, c => c.StartsWith("theme=dark;"));
+        Assert.All(response.SetCookies, c => Assert.EndsWith("; Secure", c));
     }
 
     [Fact]

@@ -12,6 +12,15 @@
     <NoWarn>SA1201</NoWarn>
   </PropertyGroup>
 
+  <!-- Audit direct and transitive packages; a high (NU1903) or critical (NU1904) advisory fails the
+       build (locally and in CI), low/moderate ones stay warnings. -->
+  <PropertyGroup>
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>low</NuGetAuditLevel>
+    <WarningsAsErrors>$(WarningsAsErrors);NU1903;NU1904</WarningsAsErrors>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Polyadic.CodeStyle" PrivateAssets="all" />
   </ItemGroup>

@@ -37,7 +37,7 @@ public static class SettingsForm
 
         return create
             .Apply(TryParseSiteName(siteName), Combine)
-            .Apply(Ok(siteUrl), Combine)
+            .Apply(TryParseSiteUrl(siteUrl), Combine)
             .Apply(Ok(smtpHost), Combine)
             .Apply(TryParsePort(smtpPort), Combine)
             .Apply(Ok(smtpUsername), Combine)
@@ -51,6 +51,14 @@ public static class SettingsForm
         raw.Length >= 1
             ? Ok(raw)
             : Validated.Fail<IReadOnlyList<string>, string>(["settings.error.site_name_required"]);
+
+    // Optional, but when given it must be an absolute https:// URL (it becomes the base of email links).
+    private static Validated<IReadOnlyList<string>, string> TryParseSiteUrl(string raw) =>
+        raw.Length == 0
+            ? Ok(raw)
+            : SiteUrl.ParseOrNone(raw).Match(
+                none: () => Validated.Fail<IReadOnlyList<string>, string>(["settings.error.site_url_invalid"]),
+                some: Ok);
 
     private static Validated<IReadOnlyList<string>, int> TryParsePort(string raw) =>
         int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) && value is >= 1 and <= 65535

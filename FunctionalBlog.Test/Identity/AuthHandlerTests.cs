@@ -82,6 +82,7 @@ public sealed class AuthHandlerTests
         Assert.Equal(303, login.Status);
         Assert.Equal("/", login.Headers["Location"]);
         Assert.NotEmpty(login.SetCookies);
+        Assert.All(login.SetCookies, c => Assert.EndsWith("; Secure", c));
     }
 
     [Fact]
@@ -137,6 +138,7 @@ public sealed class AuthHandlerTests
         Assert.Equal(303, response.Status);
         Assert.NotEmpty(response.SetCookies);
         Assert.Contains("Max-Age=0", response.SetCookies[0]);
+        Assert.All(response.SetCookies, c => Assert.EndsWith("; Secure", c));
         FunctionalAssert.None(await env.Sessions.Find(token));
     }
 
@@ -164,7 +166,39 @@ public sealed class AuthHandlerTests
         await AuthHandlers.RequestPasswordReset(ResetRequestRequest("reset@blog.de"))(env);
 
         Assert.Single(email.Sent);
-        Assert.Contains("/password-reset/confirm?token=", email.Sent[0].Body);
+        Assert.Contains("https://foodblog.ch/password-reset/confirm?token=", email.Sent[0].Body);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("http://foodblog.ch")]
+    public async Task Password_reset_without_a_valid_site_url_sends_no_mail_and_logs_an_error(string siteUrl)
+    {
+        var email = new RecordingEmailSender();
+        var log = new TestLog();
+        var env = BuildEnv(log, email, siteUrl);
+        await SeedRoles(env);
+        await env.Users.Save(User.Create(await env.Users.NextId(), new Email("reset@blog.de"), new DisplayName("R"), "hash", ["Benutzer"], DateTimeOffset.UtcNow, emailVerified: true));
+
+        var response = await AuthHandlers.RequestPasswordReset(ResetRequestRequest("reset@blog.de"))(env);
+
+        Assert.Equal(200, response.Status);
+        Assert.Empty(email.Sent);
+        Assert.Contains(log.Messages, m => m.Contains("site.url"));
+    }
+
+    [Fact]
+    public async Task Registration_without_a_site_url_sends_no_verification_mail_and_logs_an_error()
+    {
+        var email = new RecordingEmailSender();
+        var log = new TestLog();
+        var env = BuildEnv(log, email, siteUrl: string.Empty);
+        await SeedRoles(env);
+
+        await AuthHandlers.Register(RegisterRequest("neu@blog.de", "geheim123", "geheim123"))(env);
+
+        Assert.Empty(email.Sent);
+        Assert.Contains(log.Messages, m => m.Contains("site.url"));
     }
 
     [Fact]
@@ -206,7 +240,7 @@ public sealed class AuthHandlerTests
         Assert.Equal(400, response.Status);
     }
 
-    private static Env BuildEnv(ILog? log = null, IEmailSender? email = null) => new(
+    private static Env BuildEnv(ILog? log = null, IEmailSender? email = null, string siteUrl = "https://foodblog.ch") => new(
         Articles: new InMemoryArticleRepository(),
         Users: new InMemoryUserRepository(),
         Roles: new InMemoryRoleRepository(),
@@ -221,6 +255,7 @@ public sealed class AuthHandlerTests
         Units: new InMemoryUnitRepository(),
         Images: new InMemoryImageRepository(),
         Pages: new InMemoryPageRepository(),
+        Config: TestConfiguration.With((ConfigurationKeys.SiteUrl, siteUrl)),
         Email: email,
         EmailVerifications: new InMemoryEmailVerificationTokenStore());
 

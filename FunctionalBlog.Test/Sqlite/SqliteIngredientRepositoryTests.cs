@@ -6,5 +6,5 @@ public sealed class SqliteIngredientRepositoryTests : IngredientRepositoryContra
 
     public void Dispose() => _db.Dispose();
 
-    protected override IIngredientRepository CreateRepository() => new SqliteIngredientRepository(_db.Connection);
+    protected override IIngredientRepository CreateRepository() => new SqliteIngredientRepository(_db.Connections);
 }

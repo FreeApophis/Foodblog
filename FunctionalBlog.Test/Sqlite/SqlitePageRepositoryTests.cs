@@ -6,5 +6,5 @@ public sealed class SqlitePageRepositoryTests : PageRepositoryContract, IDisposa
 
     public void Dispose() => _db.Dispose();
 
-    protected override IPageRepository CreateRepository() => new SqlitePageRepository(_db.Connection);
+    protected override IPageRepository CreateRepository() => new SqlitePageRepository(_db.Connections);
 }

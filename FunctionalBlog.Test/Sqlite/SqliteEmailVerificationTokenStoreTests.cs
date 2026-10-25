@@ -6,5 +6,5 @@ public sealed class SqliteEmailVerificationTokenStoreTests : Test.Identity.Email
 
     public void Dispose() => _db.Dispose();
 
-    protected override IEmailVerificationTokenStore CreateStore() => new SqliteEmailVerificationTokenStore(_db.Connection);
+    protected override IEmailVerificationTokenStore CreateStore() => new SqliteEmailVerificationTokenStore(_db.Connections);
 }

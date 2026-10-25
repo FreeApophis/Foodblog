@@ -26,7 +26,7 @@ public sealed class TagNormalizationTests : IDisposable
     [Fact]
     public async Task Saving_two_recipes_with_the_same_tag_stores_the_tag_once()
     {
-        var repo = new SqliteRecipeRepository(_db.Connection);
+        var repo = new SqliteRecipeRepository(_db.Connections);
         var first = await repo.NextId();
         var second = await repo.NextId();
         await repo.Save(ARecipe(first, "Suppe", "Vegetarisch"));
@@ -55,7 +55,7 @@ public sealed class TagNormalizationTests : IDisposable
     [Fact]
     public async Task Every_saved_article_owns_a_taggable()
     {
-        var articles = new SqliteArticleRepository(_db.Connection);
+        var articles = new SqliteArticleRepository(_db.Connections);
         var id = await articles.NextId();
         await articles.Save(AnArticle(id));
 
@@ -71,7 +71,7 @@ public sealed class TagNormalizationTests : IDisposable
     [Fact]
     public async Task Deleting_a_recipe_removes_its_taggable_and_taggings()
     {
-        var repo = new SqliteRecipeRepository(_db.Connection);
+        var repo = new SqliteRecipeRepository(_db.Connections);
         var id = await repo.NextId();
         await repo.Save(ARecipe(id, "Wegwerf", "Test"));
 
@@ -92,11 +92,11 @@ public sealed class TagNormalizationTests : IDisposable
     [Fact]
     public async Task Suess_tag_has_transliterated_slug_and_tags_the_macaron_article()
     {
-        var tags = new SqliteTagRepository(_db.Connection);
+        var tags = new SqliteTagRepository(_db.Connections);
         var tag = FunctionalAssert.Some(await tags.FindBySlug("suess"));
         Assert.Equal("süss", tag.Name);
 
-        var articles = new SqliteArticleRepository(_db.Connection);
+        var articles = new SqliteArticleRepository(_db.Connections);
         var tagged = await articles.FindByTag("suess");
         Assert.Contains(tagged, a => a.Title.Value == "Macarons selbst backen");
     }
@@ -125,7 +125,7 @@ public sealed class TagNormalizationTests : IDisposable
     [Fact]
     public async Task FindIdByName_resolves_a_tag_id_case_insensitively()
     {
-        var tags = new SqliteTagRepository(_db.Connection);
+        var tags = new SqliteTagRepository(_db.Connections);
 
         // SQLite's NOCASE folds ASCII case, so "Süss" (capital S) resolves to the stored "süss".
         var id = FunctionalAssert.Some(await tags.FindIdByName("Süss"));

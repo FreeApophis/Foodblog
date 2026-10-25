@@ -1,20 +1,21 @@
-using System.Data;
 using Dapper;
+using FunctionalBlog.DataAccess.Sqlite;
 
 namespace FunctionalBlog.DataAccess.Images;
 
 public sealed class SqliteImageRepository : IImageRepository
 {
-    private readonly IDbConnection _connection;
+    private readonly SqliteConnectionFactory _connections;
     private int _nextId = -1;
 
-    public SqliteImageRepository(IDbConnection connection) => _connection = connection;
+    public SqliteImageRepository(SqliteConnectionFactory connections) => _connections = connections;
 
     public async ValueTask<ImageId> NextId()
     {
+        await using var connection = await _connections.OpenAsync();
         if (_nextId < 0)
         {
-            _nextId = await _connection.ExecuteScalarAsync<int>("SELECT COALESCE(MAX(id), 0) FROM images");
+            _nextId = await connection.ExecuteScalarAsync<int>("SELECT COALESCE(MAX(id), 0) FROM images");
         }
 
         return new ImageId(++_nextId);
@@ -22,7 +23,8 @@ public sealed class SqliteImageRepository : IImageRepository
 
     public async ValueTask Save(Image image)
     {
-        await _connection.ExecuteAsync(
+        await using var connection = await _connections.OpenAsync();
+        await connection.ExecuteAsync(
             """
             INSERT OR REPLACE INTO images (id, file_name, content_type, data, byte_size, uploaded_by, created_at, focal_x, focal_y)
             VALUES (@Id, @FileName, @ContentType, @Data, @ByteSize, @UploadedBy, @CreatedAt, @FocalX, @FocalY)
@@ -43,7 +45,8 @@ public sealed class SqliteImageRepository : IImageRepository
 
     public async ValueTask<Option<Image>> Find(ImageId id)
     {
-        var row = await _connection.QuerySingleOrDefaultAsync<ImageRow>(
+        await using var connection = await _connections.OpenAsync();
+        var row = await connection.QuerySingleOrDefaultAsync<ImageRow>(
             "SELECT id AS Id, file_name AS FileName, content_type AS ContentType, data AS Data, byte_size AS ByteSize, uploaded_by AS UploadedBy, created_at AS CreatedAt, focal_x AS FocalX, focal_y AS FocalY FROM images WHERE id = @id",
             new { id = id.Value });
 
@@ -52,21 +55,24 @@ public sealed class SqliteImageRepository : IImageRepository
 
     public async ValueTask<IReadOnlyList<ImageSummary>> List()
     {
-        var rows = await _connection.QueryAsync<ImageSummaryRow>(
+        await using var connection = await _connections.OpenAsync();
+        var rows = await connection.QueryAsync<ImageSummaryRow>(
             "SELECT id AS Id, file_name AS FileName, content_type AS ContentType, byte_size AS ByteSize, created_at AS CreatedAt, focal_x AS FocalX, focal_y AS FocalY FROM images ORDER BY created_at DESC");
         return rows.Select(ToSummary).ToList();
     }
 
     public async ValueTask<IReadOnlyDictionary<int, FocalPoint>> FocalPoints()
     {
-        var rows = await _connection.QueryAsync<FocalRow>(
+        await using var connection = await _connections.OpenAsync();
+        var rows = await connection.QueryAsync<FocalRow>(
             "SELECT id AS Id, focal_x AS FocalX, focal_y AS FocalY FROM images WHERE focal_x <> 0.5 OR focal_y <> 0.5");
         return rows.ToDictionary(r => (int)r.Id, r => new FocalPoint(r.FocalX, r.FocalY));
     }
 
     public async ValueTask Delete(ImageId id)
     {
-        await _connection.ExecuteAsync("DELETE FROM images WHERE id = @id", new { id = id.Value });
+        await using var connection = await _connections.OpenAsync();
+        await connection.ExecuteAsync("DELETE FROM images WHERE id = @id", new { id = id.Value });
     }
 
     private static Image ToImage(ImageRow row) =>

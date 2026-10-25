@@ -34,18 +34,18 @@ public sealed class SeederSqliteTests : IDisposable
     }
 
     private Env BuildEnv() => new(
-        Articles: new SqliteArticleRepository(_db.Connection),
-        Users: new SqliteUserRepository(_db.Connection),
-        Roles: new SqliteRoleRepository(_db.Connection),
-        Sessions: new SqliteSessionStore(_db.Connection),
+        Articles: new SqliteArticleRepository(_db.Connections),
+        Users: new SqliteUserRepository(_db.Connections),
+        Roles: new SqliteRoleRepository(_db.Connections),
+        Sessions: new SqliteSessionStore(_db.Connections),
         PasswordResets: new InMemoryPasswordResetTokenStore(),
         PasswordHasher: new Pbkdf2PasswordHasher(),
         Clock: new SystemClock(),
         Log: new TestLog(),
         CurrentUser: Guest.Instance,
-        Recipes: new SqliteRecipeRepository(_db.Connection),
-        Ingredients: new SqliteIngredientRepository(_db.Connection),
-        Units: new SqliteUnitRepository(_db.Connection),
+        Recipes: new SqliteRecipeRepository(_db.Connections),
+        Ingredients: new SqliteIngredientRepository(_db.Connections),
+        Units: new SqliteUnitRepository(_db.Connections),
         Images: new InMemoryImageRepository(),
         Pages: new InMemoryPageRepository(),
         Configuration: new InMemoryConfigurationRepository());

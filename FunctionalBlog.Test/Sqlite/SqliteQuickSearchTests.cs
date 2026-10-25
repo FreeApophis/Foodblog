@@ -120,7 +120,7 @@ public sealed class SqliteQuickSearchTests : IDisposable
 
     public void Dispose() => _db.Dispose();
 
-    private SqliteQuickSearch Subject() => new(_db.Connection);
+    private SqliteQuickSearch Subject() => new(_db.Connections);
 
     private async Task SeedTag(string name, string slug)
     {
@@ -132,7 +132,7 @@ public sealed class SqliteQuickSearchTests : IDisposable
 
     private async Task SeedArticle(int id, string title, string text)
     {
-        var repo = new SqliteArticleRepository(_db.Connection);
+        var repo = new SqliteArticleRepository(_db.Connections);
         await repo.Save(Article.Create(
             new ArticleId(id),
             new ArticleTitle(title),
@@ -144,7 +144,7 @@ public sealed class SqliteQuickSearchTests : IDisposable
 
     private async Task SeedRecipe(int id, string name, string description)
     {
-        var repo = new SqliteRecipeRepository(_db.Connection);
+        var repo = new SqliteRecipeRepository(_db.Connections);
         await repo.Save(Recipe.Create(
             new RecipeId(id),
             new RecipeName(name),
@@ -161,7 +161,7 @@ public sealed class SqliteQuickSearchTests : IDisposable
 
     private async Task SeedIngredient(int id, string name)
     {
-        var repo = new SqliteIngredientRepository(_db.Connection);
+        var repo = new SqliteIngredientRepository(_db.Connections);
         await repo.Save(Ingredient.Create(
             new IngredientId(id),
             new IngredientName(name),

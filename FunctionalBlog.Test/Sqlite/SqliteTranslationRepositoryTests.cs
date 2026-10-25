@@ -6,5 +6,5 @@ public sealed class SqliteTranslationRepositoryTests : TranslationRepositoryCont
 
     public void Dispose() => _db.Dispose();
 
-    protected override ITranslationRepository CreateRepository() => new SqliteTranslationRepository(_db.Connection);
+    protected override ITranslationRepository CreateRepository() => new SqliteTranslationRepository(_db.Connections);
 }

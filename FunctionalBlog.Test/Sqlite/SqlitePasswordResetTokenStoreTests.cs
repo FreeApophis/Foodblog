@@ -6,5 +6,5 @@ public sealed class SqlitePasswordResetTokenStoreTests : PasswordResetTokenStore
 
     public void Dispose() => _db.Dispose();
 
-    protected override IPasswordResetTokenStore CreateStore() => new SqlitePasswordResetTokenStore(_db.Connection);
+    protected override IPasswordResetTokenStore CreateStore() => new SqlitePasswordResetTokenStore(_db.Connections);
 }

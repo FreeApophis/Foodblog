@@ -6,5 +6,5 @@ public sealed class SqliteUnitRepositoryTests : UnitRepositoryContract, IDisposa
 
     public void Dispose() => _db.Dispose();
 
-    protected override IUnitRepository CreateRepository() => new SqliteUnitRepository(_db.Connection);
+    protected override IUnitRepository CreateRepository() => new SqliteUnitRepository(_db.Connections);
 }

@@ -1,19 +1,20 @@
-using System.Data;
 using Dapper;
 using FunctionalBlog.Application.Slugs;
+using FunctionalBlog.DataAccess.Sqlite;
 using FunctionalBlog.Domain.Slugs;
 
 namespace FunctionalBlog.DataAccess.Slugs;
 
 public sealed class SqliteSlugRepository : ISlugRepository
 {
-    private readonly IDbConnection _connection;
+    private readonly SqliteConnectionFactory _connections;
 
-    public SqliteSlugRepository(IDbConnection connection) => _connection = connection;
+    public SqliteSlugRepository(SqliteConnectionFactory connections) => _connections = connections;
 
     public async ValueTask<Option<SlugTarget>> FindTarget(string slug)
     {
-        var row = await _connection.QuerySingleOrDefaultAsync<TargetRow>(
+        await using var connection = await _connections.OpenAsync();
+        var row = await connection.QuerySingleOrDefaultAsync<TargetRow>(
             "SELECT entity_type AS EntityType, entity_id AS EntityId FROM slugs WHERE slug = @slug",
             new { slug });
 
@@ -22,7 +23,8 @@ public sealed class SqliteSlugRepository : ISlugRepository
 
     public async ValueTask<Option<string>> FindSlug(string entityType, int entityId)
     {
-        var slug = await _connection.QuerySingleOrDefaultAsync<string>(
+        await using var connection = await _connections.OpenAsync();
+        var slug = await connection.QuerySingleOrDefaultAsync<string>(
             "SELECT slug FROM slugs WHERE entity_type = @entityType AND entity_id = @entityId",
             new { entityType, entityId });
 
@@ -31,7 +33,8 @@ public sealed class SqliteSlugRepository : ISlugRepository
 
     public async ValueTask<IReadOnlyDictionary<int, string>> SlugsFor(string entityType)
     {
-        var rows = await _connection.QueryAsync<SlugRow>(
+        await using var connection = await _connections.OpenAsync();
+        var rows = await connection.QueryAsync<SlugRow>(
             "SELECT entity_id AS EntityId, slug AS Slug FROM slugs WHERE entity_type = @entityType",
             new { entityType });
 
@@ -40,11 +43,12 @@ public sealed class SqliteSlugRepository : ISlugRepository
 
     public async ValueTask Upsert(string entityType, int entityId, string slug)
     {
-        await _connection.ExecuteAsync(
+        await using var connection = await _connections.OpenAsync();
+        await connection.ExecuteAsync(
             "DELETE FROM slugs WHERE entity_type = @entityType AND entity_id = @entityId",
             new { entityType, entityId });
 
-        await _connection.ExecuteAsync(
+        await connection.ExecuteAsync(
             "INSERT INTO slugs (slug, entity_type, entity_id) VALUES (@slug, @entityType, @entityId)",
             new { slug, entityType, entityId });
     }

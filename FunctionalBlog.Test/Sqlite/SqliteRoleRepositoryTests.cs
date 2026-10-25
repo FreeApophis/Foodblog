@@ -6,5 +6,5 @@ public sealed class SqliteRoleRepositoryTests : RoleRepositoryContract, IDisposa
 
     public void Dispose() => _db.Dispose();
 
-    protected override IRoleRepository CreateRepository() => new SqliteRoleRepository(_db.Connection);
+    protected override IRoleRepository CreateRepository() => new SqliteRoleRepository(_db.Connections);
 }

@@ -6,9 +6,13 @@ namespace FunctionalBlog.DataAccess.Pages;
 public sealed class SqlitePageRepository : IPageRepository
 {
     private readonly SqliteConnectionFactory _connections;
-    private int _nextId = -1;
+    private readonly IdSequence _ids;
 
-    public SqlitePageRepository(SqliteConnectionFactory connections) => _connections = connections;
+    public SqlitePageRepository(SqliteConnectionFactory connections)
+    {
+        _connections = connections;
+        _ids = new IdSequence(connections, "pages");
+    }
 
     public async ValueTask<IReadOnlyList<Page>> All()
     {
@@ -28,16 +32,8 @@ public sealed class SqlitePageRepository : IPageRepository
         return Option.FromNullable(row).Select(ToPage);
     }
 
-    public async ValueTask<PageId> NextId()
-    {
-        await using var connection = await _connections.OpenAsync();
-        if (_nextId < 0)
-        {
-            _nextId = await connection.ExecuteScalarAsync<int>("SELECT COALESCE(MAX(id), 0) FROM pages");
-        }
-
-        return new PageId(++_nextId);
-    }
+    public async ValueTask<PageId> NextId() =>
+        new(await _ids.Next());
 
     public async ValueTask Save(Page page)
     {

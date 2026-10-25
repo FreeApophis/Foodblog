@@ -5,9 +5,13 @@ namespace FunctionalBlog.DataAccess.Sqlite;
 public sealed class SqliteUserRepository : IUserRepository
 {
     private readonly SqliteConnectionFactory _connections;
-    private int _nextId = -1;
+    private readonly IdSequence _ids;
 
-    public SqliteUserRepository(SqliteConnectionFactory connections) => _connections = connections;
+    public SqliteUserRepository(SqliteConnectionFactory connections)
+    {
+        _connections = connections;
+        _ids = new IdSequence(connections, "users");
+    }
 
     public async ValueTask<IReadOnlyList<User>> All()
     {
@@ -61,16 +65,8 @@ public sealed class SqliteUserRepository : IUserRepository
         return Option.Some(ToUser(row, roles));
     }
 
-    public async ValueTask<UserId> NextId()
-    {
-        await using var connection = await _connections.OpenAsync();
-        if (_nextId < 0)
-        {
-            _nextId = await connection.ExecuteScalarAsync<int>("SELECT COALESCE(MAX(id), 0) FROM users");
-        }
-
-        return new UserId(++_nextId);
-    }
+    public async ValueTask<UserId> NextId() =>
+        new(await _ids.Next());
 
     public async ValueTask Save(User user)
     {

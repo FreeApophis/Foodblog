@@ -20,9 +20,13 @@ public sealed class SqliteRecipeRepository : IRecipeRepository
         "SELECT id AS Id, name AS Name, description AS Description, author_id AS AuthorId, difficulty AS Difficulty, portions AS Portions, preparation_time AS PreparationTime, cooking_time AS CookingTime, calorific_value AS CalorificValue FROM recipes";
 
     private readonly SqliteConnectionFactory _connections;
-    private int _nextId = -1;
+    private readonly IdSequence _ids;
 
-    public SqliteRecipeRepository(SqliteConnectionFactory connections) => _connections = connections;
+    public SqliteRecipeRepository(SqliteConnectionFactory connections)
+    {
+        _connections = connections;
+        _ids = new IdSequence(connections, "recipes");
+    }
 
     public async ValueTask<IReadOnlyList<Recipe>> All()
     {
@@ -78,16 +82,8 @@ public sealed class SqliteRecipeRepository : IRecipeRepository
         return Option.Some(BuildRecipe(row, steps, tags, ingredients, images, hints));
     }
 
-    public async ValueTask<RecipeId> NextId()
-    {
-        await using var connection = await _connections.OpenAsync();
-        if (_nextId < 0)
-        {
-            _nextId = await connection.ExecuteScalarAsync<int>("SELECT COALESCE(MAX(id), 0) FROM recipes");
-        }
-
-        return new RecipeId(++_nextId);
-    }
+    public async ValueTask<RecipeId> NextId() =>
+        new(await _ids.Next());
 
     public async ValueTask Save(Recipe recipe)
     {

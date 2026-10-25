@@ -5,9 +5,13 @@ namespace FunctionalBlog.DataAccess.Sqlite;
 public sealed class SqliteIngredientRepository : IIngredientRepository
 {
     private readonly SqliteConnectionFactory _connections;
-    private int _nextId = -1;
+    private readonly IdSequence _ids;
 
-    public SqliteIngredientRepository(SqliteConnectionFactory connections) => _connections = connections;
+    public SqliteIngredientRepository(SqliteConnectionFactory connections)
+    {
+        _connections = connections;
+        _ids = new IdSequence(connections, "ingredients");
+    }
 
     public async ValueTask<IReadOnlyList<Ingredient>> All()
     {
@@ -27,16 +31,8 @@ public sealed class SqliteIngredientRepository : IIngredientRepository
         return Option.FromNullable(row).Select(ToIngredient);
     }
 
-    public async ValueTask<IngredientId> NextId()
-    {
-        await using var connection = await _connections.OpenAsync();
-        if (_nextId < 0)
-        {
-            _nextId = await connection.ExecuteScalarAsync<int>("SELECT COALESCE(MAX(id), 0) FROM ingredients");
-        }
-
-        return new IngredientId(++_nextId);
-    }
+    public async ValueTask<IngredientId> NextId() =>
+        new(await _ids.Next());
 
     public async ValueTask Save(Ingredient ingredient)
     {

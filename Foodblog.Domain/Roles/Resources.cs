@@ -24,5 +24,5 @@ public static class Resources
     // Resource keys in stable alphabetical order, for the role editor's resource dropdown and any
     // other place that needs to list every guardable resource.
     public static IReadOnlyList<string> AllKeys { get; } =
-        All.Select(resource => resource.ResourceKey).OrderBy(key => key, StringComparer.Ordinal).ToList();
+        All.Select(resource => resource.ResourceKey).OrderBy(Functional.Identity, StringComparer.Ordinal).ToList();
 }

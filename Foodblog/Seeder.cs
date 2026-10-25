@@ -545,6 +545,7 @@ public static class Seeder
         {
             var ingredients = (await env.Ingredients.All()).ToDictionary(i => i.Name.Value, i => i.Id);
 
+#pragma warning disable SA1317 // Identifier should be named only with Latin letters
             if (!ingredients.TryGetValue("Mehl", out var mehlId) ||
                 !ingredients.TryGetValue("Zucker", out var zuckerId) ||
                 !ingredients.TryGetValue("Butter", out var butterId) ||
@@ -570,6 +571,7 @@ public static class Seeder
             {
                 return;
             }
+#pragma warning restore SA1317 // Identifier should be named only with Latin letters
 
             var kuchenId = await env.Recipes.NextId();
             await env.Recipes.Save(Recipe.Create(
@@ -578,9 +580,9 @@ public static class Seeder
                 new RecipeDescription("Ein klassischer Rührkuchen – saftig, locker und immer beliebt."),
                 [
                     new PreparationStep(1, "Butter und Zucker cremig rühren."),
-                new PreparationStep(2, "Eier einzeln unterrühren."),
-                new PreparationStep(3, "Mehl und Milch abwechselnd unterheben."),
-                new PreparationStep(4, "Teig in eine gefettete Form füllen und bei 175 °C ca. 40 Minuten backen."),
+                    new PreparationStep(2, "Eier einzeln unterrühren."),
+                    new PreparationStep(3, "Mehl und Milch abwechselnd unterheben."),
+                    new PreparationStep(4, "Teig in eine gefettete Form füllen und bei 175 °C ca. 40 Minuten backen."),
                 ],
                 admin.Id,
                 Difficulty.Medium,
@@ -588,10 +590,10 @@ public static class Seeder
                 8,
                 [
                     new RecipeIngredient(mehlId, 250m, Gram),
-                new RecipeIngredient(zuckerId, 200m, Gram),
-                new RecipeIngredient(butterId, 125m, Gram),
-                new RecipeIngredient(eierId, 3m, Piece),
-                new RecipeIngredient(milchId, 100m, Milliliter),
+                    new RecipeIngredient(zuckerId, 200m, Gram),
+                    new RecipeIngredient(butterId, 125m, Gram),
+                    new RecipeIngredient(eierId, 3m, Piece),
+                    new RecipeIngredient(milchId, 100m, Milliliter),
                 ],
                 [],
                 [new RecipeHint("Den Kuchen mit einem Holzstäbchen auf Gare prüfen – bleibt kein Teig kleben, ist er fertig.")],
@@ -605,8 +607,8 @@ public static class Seeder
                 new RecipeDescription("Dünne, goldbraune Pfannkuchen – schnell gemacht und vielseitig belegbar."),
                 [
                     new PreparationStep(1, "Mehl, Milch und Eier zu einem glatten Teig verrühren."),
-                new PreparationStep(2, "Teig 15 Minuten ruhen lassen."),
-                new PreparationStep(3, "Butter in einer Pfanne erhitzen und Pfannkuchen portionsweise ausbacken."),
+                    new PreparationStep(2, "Teig 15 Minuten ruhen lassen."),
+                    new PreparationStep(3, "Butter in einer Pfanne erhitzen und Pfannkuchen portionsweise ausbacken."),
                 ],
                 admin.Id,
                 Difficulty.Easy,
@@ -614,9 +616,9 @@ public static class Seeder
                 4,
                 [
                     new RecipeIngredient(mehlId, 200m, Gram),
-                new RecipeIngredient(milchId, 400m, Milliliter),
-                new RecipeIngredient(eierId, 2m, Piece),
-                new RecipeIngredient(butterId, 20m, Gram),
+                    new RecipeIngredient(milchId, 400m, Milliliter),
+                    new RecipeIngredient(eierId, 2m, Piece),
+                    new RecipeIngredient(butterId, 20m, Gram),
                 ],
                 [],
                 [new RecipeHint("Den Teig nicht zu lange rühren – ein paar kleine Klümpchen sind in Ordnung.")],
@@ -629,10 +631,10 @@ public static class Seeder
                 new RecipeDescription("Ein herzhafter Eintopf mit Kartoffeln, Paprika und Gewürzgurken – ein Klassiker der deutschen Hausmannskost."),
                 [
                     new PreparationStep(1, "Zwiebel fein würfeln und im Öl in einem großen Topf bei mittlerer Hitze glasig andünsten."),
-                new PreparationStep(2, "Kartoffeln schälen und in Würfel schneiden. Mit Paprikapulver, Kümmel und gepresstem Knoblauch in den Topf geben und kurz mitdünsten."),
-                new PreparationStep(3, "Mit Wasser bedecken und zum Kochen bringen."),
-                new PreparationStep(4, "Karotten in Scheiben und Gewürzgurken in Stücke schneiden. Zusammen mit dem Gurkenwasser und Salz in den Topf geben."),
-                new PreparationStep(5, "Bei niedriger bis mittlerer Hitze 60–90 Minuten köcheln lassen, bis die Kartoffeln weich sind."),
+                    new PreparationStep(2, "Kartoffeln schälen und in Würfel schneiden. Mit Paprikapulver, Kümmel und gepresstem Knoblauch in den Topf geben und kurz mitdünsten."),
+                    new PreparationStep(3, "Mit Wasser bedecken und zum Kochen bringen."),
+                    new PreparationStep(4, "Karotten in Scheiben und Gewürzgurken in Stücke schneiden. Zusammen mit dem Gurkenwasser und Salz in den Topf geben."),
+                    new PreparationStep(5, "Bei niedriger bis mittlerer Hitze 60–90 Minuten köcheln lassen, bis die Kartoffeln weich sind."),
                 ],
                 admin.Id,
                 Difficulty.Easy,
@@ -640,15 +642,15 @@ public static class Seeder
                 4,
                 [
                     new RecipeIngredient(zwiebelId, 1m, Piece),
-                new RecipeIngredient(ölId, 1m, Tablespoon),
-                new RecipeIngredient(paprikaId, 2m, Tablespoon),
-                new RecipeIngredient(kartoffelnId, 1000m, Gram),
-                new RecipeIngredient(knoblauchId, 3m, Piece),
-                new RecipeIngredient(kümmelId, 1m, Tablespoon),
-                new RecipeIngredient(karottenId, 2m, Piece),
-                new RecipeIngredient(gewürzgurkenId, 3m, Piece),
-                new RecipeIngredient(salzId, 1m, Teaspoon),
-                new RecipeIngredient(gurkenwasserId, 1m, Tablespoon),
+                    new RecipeIngredient(ölId, 1m, Tablespoon),
+                    new RecipeIngredient(paprikaId, 2m, Tablespoon),
+                    new RecipeIngredient(kartoffelnId, 1000m, Gram),
+                    new RecipeIngredient(knoblauchId, 3m, Piece),
+                    new RecipeIngredient(kümmelId, 1m, Tablespoon),
+                    new RecipeIngredient(karottenId, 2m, Piece),
+                    new RecipeIngredient(gewürzgurkenId, 3m, Piece),
+                    new RecipeIngredient(salzId, 1m, Teaspoon),
+                    new RecipeIngredient(gurkenwasserId, 1m, Tablespoon),
                 ],
                 [],
                 [new RecipeHint("Am zweiten Tag schmeckt das Gericht noch besser – einfach aufwärmen und genießen.")],
@@ -661,7 +663,7 @@ public static class Seeder
                 new RecipeDescription("Ein echtes Schweizer Nationalgericht in einer kreativen und schnell gemachten Variante – alles in einem Topf."),
                 [
                     new PreparationStep(1, "Magronen, Kartoffeln, Äpfel, Speck, Frühlingszwiebeln und Bouillon in einen großen Topf geben, mischen und zum Kochen bringen. Bei mittlerer Hitze ohne Deckel ca. 20 Minuten köcheln lassen, dabei gelegentlich umrühren."),
-                new PreparationStep(2, "Rahm und Bergkäse unterrühren, abschmecken und nach Belieben mit Röstzwiebeln garnieren."),
+                    new PreparationStep(2, "Rahm und Bergkäse unterrühren, abschmecken und nach Belieben mit Röstzwiebeln garnieren."),
                 ],
                 admin.Id,
                 Difficulty.Easy,
@@ -669,13 +671,13 @@ public static class Seeder
                 4,
                 [
                     new RecipeIngredient(magronenId, 400m, Gram),
-                new RecipeIngredient(kartoffelnId, 240m, Gram),
-                new RecipeIngredient(äpfelId, 2m, Piece),
-                new RecipeIngredient(speckId, 160m, Gram),
-                new RecipeIngredient(frühlingszwiebelnId, 1m, Piece),
-                new RecipeIngredient(rahmId, 3m, Deciliter),
-                new RecipeIngredient(bouillonId, 8m, Deciliter),
-                new RecipeIngredient(käseId, 79m, Gram),
+                    new RecipeIngredient(kartoffelnId, 240m, Gram),
+                    new RecipeIngredient(äpfelId, 2m, Piece),
+                    new RecipeIngredient(speckId, 160m, Gram),
+                    new RecipeIngredient(frühlingszwiebelnId, 1m, Piece),
+                    new RecipeIngredient(rahmId, 3m, Deciliter),
+                    new RecipeIngredient(bouillonId, 8m, Deciliter),
+                    new RecipeIngredient(käseId, 79m, Gram),
                 ],
                 [],
                 [new RecipeHint("Das Gericht nicht zu lange kochen – die Magronen sollen noch bissfest sein.")],

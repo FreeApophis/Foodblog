@@ -8,7 +8,7 @@ public sealed class RecipePdfTests
     private static readonly byte[] OnePixelPng = Convert.FromBase64String(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M8AAAMCAoBoPgC+AAAAAElFTkSuQmCC");
 
-    private static readonly Translate Echo = key => key;
+    private static readonly Translate Echo = Functional.Identity;
 
     [Fact]
     public void Generate_default_design_produces_a_pdf()

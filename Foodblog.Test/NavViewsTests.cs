@@ -145,5 +145,5 @@ public sealed class NavViewsTests
         return new AuthenticatedUser(user, roles);
     }
 
-    private static readonly Translate NoOp = key => key;
+    private static readonly Translate NoOp = Functional.Identity;
 }

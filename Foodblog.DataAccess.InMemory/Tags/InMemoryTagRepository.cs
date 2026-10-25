@@ -32,6 +32,6 @@ public sealed class InMemoryTagRepository : ITagRepository
         ValueTask.FromResult(_names
             .Where(kv => string.Equals(kv.Value, name, StringComparison.OrdinalIgnoreCase))
             .Select(kv => kv.Key)
-            .OrderBy(id => id)
+            .OrderBy(Functional.Identity)
             .FirstOrNone());
 }

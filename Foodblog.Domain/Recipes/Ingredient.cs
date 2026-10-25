@@ -14,11 +14,9 @@ public sealed record Ingredient(
     decimal Sugar,
     decimal Fiber)
 {
-    // True when descriptive fields nobody can default sensibly are still blank — used by the admin
-    // overview to flag stub ingredients (e.g. those quick-created from the recipe form) that still
-    // need filling in. Numeric fields are excluded because zero can be a legitimate value.
-    public bool HasMissingInformation =>
-        string.IsNullOrWhiteSpace(Description) || string.IsNullOrWhiteSpace(Image);
+    // For now this is always false. TODO: we need to differentiate between 0 and not set which is currently not possible with decimal.
+    public bool HasMissingInformation
+        => false;
 
     public static Ingredient Create(
         IngredientId id,

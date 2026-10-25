@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <PackageReference Include="Polyadic.CodeStyle" PrivateAssets="all" />
+    <PackageReference Include="Funcky.Analyzers" PrivateAssets="all" />
   </ItemGroup>
   <PropertyGroup>
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>

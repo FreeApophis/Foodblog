@@ -30,7 +30,7 @@ public abstract class EmailVerificationTokenStoreContract
         await store.Consume("verify2");
 
         var found = await store.Find("verify2");
-        Assert.True(found.Match(none: () => false, some: t => t.Consumed));
+        Assert.True(found.Match(none: False, some: t => t.Consumed));
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public abstract class EmailVerificationTokenStoreContract
         await store.Consume("verify3");
 
         var found = await store.Find("verify3");
-        Assert.True(found.Match(none: () => false, some: t => t.Consumed));
+        Assert.True(found.Match(none: False, some: t => t.Consumed));
     }
 
     protected abstract IEmailVerificationTokenStore CreateStore();

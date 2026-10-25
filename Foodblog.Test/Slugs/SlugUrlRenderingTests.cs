@@ -9,7 +9,7 @@ public class SlugUrlRenderingTests
 
     private static ViewContext WithSlugs => new(
         Guest.Instance,
-        key => key,
+        Functional.Identity,
         string.Empty,
         "light",
         Languages.Default,

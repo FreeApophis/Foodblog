@@ -6,9 +6,13 @@ namespace FunctionalBlog.DataAccess.Sqlite;
 public sealed class SqliteArticleRepository : IArticleRepository
 {
     private readonly SqliteConnectionFactory _connections;
-    private int _nextId = -1;
+    private readonly IdSequence _ids;
 
-    public SqliteArticleRepository(SqliteConnectionFactory connections) => _connections = connections;
+    public SqliteArticleRepository(SqliteConnectionFactory connections)
+    {
+        _connections = connections;
+        _ids = new IdSequence(connections, "articles");
+    }
 
     public async ValueTask<IReadOnlyList<Article>> All()
     {
@@ -41,16 +45,8 @@ public sealed class SqliteArticleRepository : IArticleRepository
         return Option.FromNullable(row).Select(ToArticle);
     }
 
-    public async ValueTask<ArticleId> NextId()
-    {
-        await using var connection = await _connections.OpenAsync();
-        if (_nextId < 0)
-        {
-            _nextId = await connection.ExecuteScalarAsync<int>("SELECT COALESCE(MAX(id), 0) FROM articles");
-        }
-
-        return new ArticleId(++_nextId);
-    }
+    public async ValueTask<ArticleId> NextId() =>
+        new(await _ids.Next());
 
     public async ValueTask Save(Article article)
     {

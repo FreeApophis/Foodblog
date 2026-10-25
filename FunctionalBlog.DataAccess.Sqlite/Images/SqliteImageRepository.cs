@@ -6,20 +6,16 @@ namespace FunctionalBlog.DataAccess.Images;
 public sealed class SqliteImageRepository : IImageRepository
 {
     private readonly SqliteConnectionFactory _connections;
-    private int _nextId = -1;
+    private readonly IdSequence _ids;
 
-    public SqliteImageRepository(SqliteConnectionFactory connections) => _connections = connections;
-
-    public async ValueTask<ImageId> NextId()
+    public SqliteImageRepository(SqliteConnectionFactory connections)
     {
-        await using var connection = await _connections.OpenAsync();
-        if (_nextId < 0)
-        {
-            _nextId = await connection.ExecuteScalarAsync<int>("SELECT COALESCE(MAX(id), 0) FROM images");
-        }
-
-        return new ImageId(++_nextId);
+        _connections = connections;
+        _ids = new IdSequence(connections, "images");
     }
+
+    public async ValueTask<ImageId> NextId() =>
+        new(await _ids.Next());
 
     public async ValueTask Save(Image image)
     {

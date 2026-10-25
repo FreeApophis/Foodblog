@@ -29,5 +29,10 @@ public sealed class SqliteSessionStore : ISessionStore
         await _connection.ExecuteAsync("DELETE FROM sessions WHERE token = @token", new { token });
     }
 
+    public async ValueTask DeleteAllForUser(UserId userId)
+    {
+        await _connection.ExecuteAsync("DELETE FROM sessions WHERE user_id = @userId", new { userId = userId.Value });
+    }
+
     private sealed record SessionRow(string Token, long UserId, DateTimeOffset ExpiresAt);
 }

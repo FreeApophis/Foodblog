@@ -22,7 +22,7 @@ internal class Program
         var translations = new SqliteTranslationRepository(connection);
         var env = BuildEnv(connection, translations);
 
-        await Seeder.SeedAsync(env);
+        await Seeder.SeedAsync(env, Option.FromNullable(Environment.GetEnvironmentVariable("BOOTSTRAP_ADMIN_EMAIL")));
         await SlugBackfill.Run(new SlugService(env.Slugs!), env.Articles, env.Recipes, env.Pages, env.Ingredients, env.Tags!);
         var translationCache = await TranslationCache.LoadAsync(translations);
         var configurationCache = await ConfigurationCache.LoadAsync(env.Configuration!);

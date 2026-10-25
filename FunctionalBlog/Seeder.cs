@@ -1,19 +1,30 @@
+using System.Security.Cryptography;
+
 namespace FunctionalBlog;
 
 public static class Seeder
 {
-    private const string AdminEmail = "admin@blog.de";
-    private const string AdminPassword = "Admin1234";
+    private const string DefaultAdminEmail = "admin@blog.de";
+
+    // Earlier releases created DefaultAdminEmail with this password, and the 0002_seed migration still
+    // ships it. It is public, so it is only ever used to detect (and lock) that account, never to log in.
+    private const string LeakedDefaultPassword = "Admin1234";
+
+    private const string PasswordAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+    private const int GeneratedPasswordLength = 24;
     private const string AdminRoleName = "Admin";
     private const string DefaultRoleName = "Benutzer";
 
-    public static async ValueTask SeedAsync(Env env)
+    public static ValueTask SeedAsync(Env env) => SeedAsync(env, Option<string>.None);
+
+    public static async ValueTask SeedAsync(Env env, Option<string> bootstrapAdminEmail)
     {
         await SeedRoles(env);
-        await SeedAdminUser(env);
-        await SeedSampleArticles(env);
+        await LockLeakedDefaultAdmin(env);
+        var bootstrapAdmin = await BootstrapAdmin(env, bootstrapAdminEmail);
+        await SeedSampleArticles(env, bootstrapAdmin);
         await SeedSampleIngredients(env);
-        await SeedSampleRecipes(env);
+        await SeedSampleRecipes(env, bootstrapAdmin);
         await RecomputeRecipeCalories(env);
         await SeedConfiguration(env);
 
@@ -129,27 +140,56 @@ public static class Seeder
         await env.Roles.Save(role);
     }
 
-    private static async ValueTask SeedAdminUser(Env env)
+    // If the account still has the publicly known default password, replace its hash with one of a
+    // random password nobody knows and end its sessions. The account and its content stay; a real
+    // admin can take it over from the admin area.
+    private static async ValueTask LockLeakedDefaultAdmin(Env env)
     {
-        if (Email.ParseOrNone(AdminEmail) is [var email] && (await env.Users.FindByEmail(email)) is [])
+        if (Email.ParseOrNone(DefaultAdminEmail) is [var email] &&
+            (await env.Users.FindByEmail(email)) is [var user] &&
+            env.PasswordHasher.Verify(LeakedDefaultPassword, user.PasswordHash))
         {
-            var id = await env.Users.NextId();
-            var hash = env.PasswordHasher.Hash(AdminPassword);
-            var user = User.Create(id, email, new DisplayName("Admin"), hash, [AdminRoleName], env.Clock.Now, emailVerified: true);
-            await env.Users.Save(user);
+            await env.Users.Save(user with { PasswordHash = env.PasswordHasher.Hash(GeneratePassword()) });
+            await env.Sessions.DeleteAllForUser(user.Id);
+            env.Log.Info($"WARNING: The account {email.Value} still had the publicly known default password. " +
+                "Its password has been replaced with an unknown random one and its sessions were ended. " +
+                "Use another admin account to take over its content or to give it a new password.");
         }
     }
 
-    private static async ValueTask SeedSampleArticles(Env env)
+    // Only a database without any users gets an admin, with a random password that is logged once.
+    // Returns the admin only when it was created by this run, so sample content is attributed to it
+    // on a fresh database and never added to an existing one.
+    private static async ValueTask<Option<User>> BootstrapAdmin(Env env, Option<string> bootstrapAdminEmail)
+    {
+        if ((await env.Users.All()).Count > 0 ||
+            bootstrapAdminEmail.SelectMany(Email.ParseOrNone).OrElse(Email.ParseOrNone(DefaultAdminEmail)) is not [var email])
+        {
+            return Option<User>.None;
+        }
+
+        var password = GeneratePassword();
+        var user = User.Create(await env.Users.NextId(), email, new DisplayName("Admin"), env.PasswordHasher.Hash(password), [AdminRoleName], env.Clock.Now, emailVerified: true);
+        await env.Users.Save(user);
+
+        env.Log.Info($"WARNING: No users found. Created the admin account {email.Value} with " +
+            $"bootstrap-admin-password: {password} " +
+            "(shown only this once). Log in and change it immediately.");
+
+        return Option.Some(user);
+    }
+
+    private static string GeneratePassword() =>
+        RandomNumberGenerator.GetString(PasswordAlphabet, GeneratedPasswordLength);
+
+    private static async ValueTask SeedSampleArticles(Env env, Option<User> bootstrapAdmin)
     {
         if ((await env.Articles.All()).Count > 0)
         {
             return;
         }
 
-        var adminEmail = Email.ParseOrNone(AdminEmail).GetOrElse(new Email("invalid"));
-
-        if ((await env.Users.FindByEmail(adminEmail)) is [var admin])
+        if (bootstrapAdmin is [var admin])
         {
             var id1 = await env.Articles.NextId();
             await env.Articles.Save(Article.Create(
@@ -494,15 +534,14 @@ public static class Seeder
             fiber: 0m));
     }
 
-    private static async ValueTask SeedSampleRecipes(Env env)
+    private static async ValueTask SeedSampleRecipes(Env env, Option<User> bootstrapAdmin)
     {
         if ((await env.Recipes.All()).Count > 0)
         {
             return;
         }
 
-        var adminEmail = Email.ParseOrNone(AdminEmail).GetOrElse(new Email("invalid"));
-        if ((await env.Users.FindByEmail(adminEmail)) is [var admin])
+        if (bootstrapAdmin is [var admin])
         {
             var ingredients = (await env.Ingredients.All()).ToDictionary(i => i.Name.Value, i => i.Id);
 

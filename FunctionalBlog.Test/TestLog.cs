@@ -4,6 +4,8 @@ public sealed class TestLog : ILog
 {
     private readonly List<string> _messages = [];
 
+    public IReadOnlyList<string> Messages => _messages;
+
     public void Info(string message) => _messages.Add(message);
 
     public void Error(Exception exception) => _messages.Add(exception.ToString());

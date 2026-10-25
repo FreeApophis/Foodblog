@@ -71,7 +71,7 @@ The single `Env` instance is built once in `Program.cs` (`BuildEnv`), threaded t
 - **Search** (Web) — `LeanCorpusSearchIndex` (`ISearchIndex`) is a LeanCorpus full-text index rebuilt on startup and updated on writes; `SqliteQuickSearch` (`IQuickSearch`) backs the instant `/search/quick` typeahead.
 - **PDF** (Web) — `RecipePdf*` render printable recipe PDFs with QuestPDF + SkiaSharp.
 - **`HttpAdapter`** (Web) — adapts ASP.NET Core's `HttpContext` to/from the domain `Request`/`Response`.
-- **`SystemClock`** / **`ConsoleLog`** (Web) — concrete `IClock` / `ILog`, wired in `Program.cs`. `Seeder` and `SlugBackfill` run idempotent startup seeding/backfill.
+- **`SystemClock`** / **`ConsoleLog`** (Web) — concrete `IClock` / `ILog`, wired in `Program.cs`. `Seeder` and `SlugBackfill` run idempotent startup seeding/backfill. `Seeder` never creates a user with a known password: on a database without any users it bootstraps one admin (`BOOTSTRAP_ADMIN_EMAIL`, default `admin@blog.de`) with a random password logged once, and it locks `admin@blog.de` if that account still has the leaked old default password.
 
 ## Functional style with Funcky `Option<T>`
 

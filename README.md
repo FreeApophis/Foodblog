@@ -52,6 +52,17 @@ dotnet run --project FunctionalBlog
 The app listens on **https://localhost:65243** (HTTP: 65244). On first run it creates a SQLite
 database, applies migrations, seeds reference data, builds the search index, and backfills slugs.
 
+**First login.** There is no default password. If the database contains no users at all, startup
+creates one admin account and writes its random password **once** to the console log, in a line
+starting with `WARNING: No users found` (look for `bootstrap-admin-password:`). Log in with it and
+change it right away. The account's email is `admin@blog.de` unless you set `BOOTSTRAP_ADMIN_EMAIL`.
+If any user already exists, no account is created. Note that the bundled `0002_seed` migration
+imports the foodblog.ch users, so a database built from it already has users.
+
+Earlier releases created `admin@blog.de` with the public password `Admin1234`. On startup, if that
+account still has that password, it is locked: its password is replaced with an unknown random one and
+its sessions are ended. The account and its content are kept, and a warning is logged.
+
 Data lives under `./data` by default (database, full-text index, config). Override the location with
 the `DATA_DIR` environment variable.
 

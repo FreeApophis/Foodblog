@@ -73,6 +73,32 @@ public sealed class BlogHandlerTests
     }
 
     [Fact]
+    public async Task Index_links_the_instagram_profile_without_loading_anything_from_instagram()
+    {
+        var env = BuildEnv();
+
+        var response = await BlogHandlers.Index(AnEmptyRequest())(env);
+
+        Assert.Contains("""href="https://www.instagram.com/the_cooking.couple_/" """, response.Body);
+        Assert.Contains("rel=\"noopener noreferrer\"", response.Body);
+        Assert.DoesNotContain("<iframe", response.Body);
+        Assert.DoesNotContain("""src="https://www.instagram.com""", response.Body);
+    }
+
+    [Fact]
+    public async Task Index_offers_to_load_the_instagram_embed_only_after_consent()
+    {
+        var env = BuildEnv();
+
+        var response = await BlogHandlers.Index(AnEmptyRequest())(env);
+
+        Assert.Contains("""data-instagram-embed="https://www.instagram.com/the_cooking.couple_/embed/" """, response.Body);
+        Assert.Contains("data-instagram-load", response.Body);
+        Assert.Contains("data-instagram-remember", response.Body);
+        Assert.DoesNotContain("<iframe", response.Body);
+    }
+
+    [Fact]
     public async Task ShowArticle_renders_the_cover_image_when_present()
     {
         var env = BuildEnv();

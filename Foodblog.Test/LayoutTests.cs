@@ -17,6 +17,7 @@ public class LayoutTests
         var html = Layout.Page("Titel", Html.Raw("<p>Inhalt</p>"));
 
         Assert.Contains("<script src=\"/select-on-click.js\" defer></script>", html);
+        Assert.Contains("<script src=\"/instagram-consent.js\" defer></script>", html);
         Assert.DoesNotMatch(@"<script(?![^>]*\ssrc=""/)[^>]*>", html);
     }
 

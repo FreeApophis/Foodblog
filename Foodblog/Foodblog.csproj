@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+	</PropertyGroup>
+  
+	<ItemGroup>
+		<Content Remove="wwwroot\styles.css" />
+		<EmbeddedResource Include="wwwroot\favicon.png" />
+		<EmbeddedResource Include="wwwroot\favicon.ico" />
+		<EmbeddedResource Include="wwwroot\styles.css" />
+		<Content Remove="wwwroot\htmx.min.js" />
+		<EmbeddedResource Include="wwwroot\htmx.min.js" />
+		<Content Remove="wwwroot\combobox-keys.js" />
+		<EmbeddedResource Include="wwwroot\combobox-keys.js" />
+		<Content Remove="wwwroot\confirm-delete.js" />
+		<EmbeddedResource Include="wwwroot\confirm-delete.js" />
+		<Content Remove="wwwroot\autofocus-swap.js" />
+		<EmbeddedResource Include="wwwroot\autofocus-swap.js" />
+		<Content Remove="wwwroot\focal-point.js" />
+		<EmbeddedResource Include="wwwroot\focal-point.js" />
+		<Content Remove="wwwroot\select-on-click.js" />
+		<EmbeddedResource Include="wwwroot\select-on-click.js" />
+		<Content Remove="wwwroot\fonts\*.woff2" />
+		<EmbeddedResource Include="wwwroot\fonts\*.woff2" />
+		<Content Remove="wwwroot\fonts\*.ttf" />
+		<EmbeddedResource Include="wwwroot\fonts\*.ttf" />
+		<Content Remove="wwwroot\images\*.png" />
+		<EmbeddedResource Include="wwwroot\images\*.png" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Funcky.DiscriminatedUnion" PrivateAssets="all" />
+		<PackageReference Include="LeanCorpus" />
+		<PackageReference Include="MailKit" />
+		<PackageReference Include="QuestPDF" />
+		<PackageReference Include="SkiaSharp" />
+		<PackageReference Include="SkiaSharp.NativeAssets.Linux" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Bbcode\Bbcode.csproj" />
+		<ProjectReference Include="..\Foodblog.Application\Foodblog.Application.csproj" />
+		<ProjectReference Include="..\Foodblog.DataAccess.Sqlite\Foodblog.DataAccess.Sqlite.csproj" />
+		<ProjectReference Include="..\Foodblog.Pipeline\Foodblog.Pipeline.csproj" />
+	</ItemGroup>
+</Project>

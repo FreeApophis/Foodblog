@@ -1,0 +1,14 @@
+global using Foodblog.Application.Articles;
+global using Foodblog.Application.Pages;
+global using Foodblog.Application.Recipes;
+global using Foodblog.Application.Tags;
+global using Foodblog.Domain.Articles;
+global using Foodblog.Domain.Identity;
+global using Foodblog.Domain.Images;
+global using Foodblog.Domain.Pages;
+global using Foodblog.Domain.Recipes;
+global using Foodblog.Domain.Roles;
+global using Foodblog.Domain.Slugs;
+global using Foodblog.Domain.Tags;
+global using Foodblog.Domain.Translations;
+global using Unit = Foodblog.Domain.Recipes.Unit;

@@ -12,37 +12,37 @@ dotnet clean                  # Clean build artifacts
 dotnet test                   # Run every xunit test project in the solution
 ```
 
-Tests live in `FunctionalBlog.Test/` and `Bbcode.Test/` (both xunit); `dotnet test` runs every test project. Code style is enforced by the `Polyadic.CodeStyle` analyzer and the Funcky analyzers (wired through `Directory.Build.props`); there is no separate linter. NuGet package versions are managed centrally in `Directory.Packages.props` (CPM is enabled). Every project targets `net10.0`, set once in `Directory.Build.props`.
+Tests live in `Foodblog.Test/` and `Bbcode.Test/` (both xunit); `dotnet test` runs every test project. Code style is enforced by the `Polyadic.CodeStyle` analyzer and the Funcky analyzers (wired through `Directory.Build.props`); there is no separate linter. NuGet package versions are managed centrally in `Directory.Packages.props` (CPM is enabled). Every project targets `net10.0`, set once in `Directory.Build.props`.
 
 ## Workflow
 
 This project follows **Test-Driven Development**. For every change to production code:
 
-1. Write a failing test in `FunctionalBlog.Test/` that captures the desired behavior.
+1. Write a failing test in `Foodblog.Test/` that captures the desired behavior.
 2. Run `dotnet test` and confirm it fails for the expected reason.
-3. Write the minimum production code in the project that owns the change (`FunctionalBlog.Domain`, `FunctionalBlog.Application`, `FunctionalBlog.Pipeline`, `FunctionalBlog.DataAccess.InMemory`, `FunctionalBlog.DataAccess.Sqlite`, `Bbcode`, or `FunctionalBlog`) to make it pass.
+3. Write the minimum production code in the project that owns the change (`Foodblog.Domain`, `Foodblog.Application`, `Foodblog.Pipeline`, `Foodblog.DataAccess.InMemory`, `Foodblog.DataAccess.Sqlite`, `Bbcode`, or `Foodblog`) to make it pass.
 4. Run `dotnet test` again and confirm all tests pass.
 5. Refactor while keeping tests green.
 
 Do not add production code that is not driven by a failing test. Do not skip step 2 — a test that has never been red proves nothing.
 
-When adding a new `IArticleRepository` implementation, derive its tests from `ArticleRepositoryContract` (in `FunctionalBlog.Test/`) so the contract is enforced uniformly across impls.
+When adding a new `IArticleRepository` implementation, derive its tests from `ArticleRepositoryContract` (in `Foodblog.Test/`) so the contract is enforced uniformly across impls.
 
 ## Architecture
 
 The solution is split into nine projects. The core dependency direction is strict (Domain ← Application ← DataAccess.* ← Web ← Test); `Pipeline` and `Bbcode` are leaf libraries the Web project also references:
 
-- **`FunctionalBlog.Domain`** — entities and value objects (Articles, Identity, Roles/permissions, Recipes, Translations). No project references. Pure domain.
-- **`FunctionalBlog.Application`** — repository/service contracts (one folder per domain area). References Domain.
-- **`FunctionalBlog.Pipeline`** — the functional HTTP core as **generic** delegates: `Effect<TEnv, T>`, `App<TEnv, TRequest, TResponse>`, `Middleware<TEnv, TRequest, TResponse>`, and `Functional.Compose`. No project references — it knows nothing about the Web types. The Web project binds the concrete aliases via `global using` (e.g. `App = Pipeline.App<Env, Request, Response>`, `Middleware = Pipeline.Middleware<Env, Request, Response>`). Referenced by Web.
-- **`FunctionalBlog.DataAccess.InMemory`** — in-memory repository implementations for use in tests, one folder per domain area. References Application.
-- **`FunctionalBlog.DataAccess.Sqlite`** — SQLite repository implementations for production, plus `DatabaseMigrator`, `DapperTypeHandlers`, `Pbkdf2PasswordHasher`, and `TranslationSeeder`. Migrations are embedded `Migrations/NNNN_*.sql` resources run by dbup-sqlite. References Application. Uses Dapper and dbup-sqlite. Repositories take a `SqliteConnectionFactory` and open a pooled connection per operation (`await using var connection = await _connections.OpenAsync();`); never keep a `SqliteConnection` in a field, because requests run in parallel and a connection is not thread-safe.
+- **`Foodblog.Domain`** — entities and value objects (Articles, Identity, Roles/permissions, Recipes, Translations). No project references. Pure domain.
+- **`Foodblog.Application`** — repository/service contracts (one folder per domain area). References Domain.
+- **`Foodblog.Pipeline`** — the functional HTTP core as **generic** delegates: `Effect<TEnv, T>`, `App<TEnv, TRequest, TResponse>`, `Middleware<TEnv, TRequest, TResponse>`, and `Functional.Compose`. No project references — it knows nothing about the Web types. The Web project binds the concrete aliases via `global using` (e.g. `App = Pipeline.App<Env, Request, Response>`, `Middleware = Pipeline.Middleware<Env, Request, Response>`). Referenced by Web.
+- **`Foodblog.DataAccess.InMemory`** — in-memory repository implementations for use in tests, one folder per domain area. References Application.
+- **`Foodblog.DataAccess.Sqlite`** — SQLite repository implementations for production, plus `DatabaseMigrator`, `DapperTypeHandlers`, `Pbkdf2PasswordHasher`, and `TranslationSeeder`. Migrations are embedded `Migrations/NNNN_*.sql` resources run by dbup-sqlite. References Application. Uses Dapper and dbup-sqlite. Repositories take a `SqliteConnectionFactory` and open a pooled connection per operation (`await using var connection = await _connections.OpenAsync();`); never keep a `SqliteConnection` in a field, because requests run in parallel and a connection is not thread-safe.
 - **`Bbcode`** — standalone, dependency-free `BbcodeRenderer` (encode-first BBCode → HTML, including inline gallery images). Referenced by Web; has its own `Bbcode.Test` project.
-- **`FunctionalBlog`** (Web) — handlers, views, forms, the concrete pipeline wiring, and the ASP.NET bootstrap. References Application, DataAccess.Sqlite, Pipeline, and Bbcode. Pulls in LeanCorpus (full-text search), QuestPDF + SkiaSharp (recipe PDF printing), and Funcky.DiscriminatedUnion.
-- **`FunctionalBlog.Test`** — xunit. References Web (gets DataAccess.Sqlite + Pipeline transitively) and DataAccess.InMemory directly.
+- **`Foodblog`** (Web) — handlers, views, forms, the concrete pipeline wiring, and the ASP.NET bootstrap. References Application, DataAccess.Sqlite, Pipeline, and Bbcode. Pulls in LeanCorpus (full-text search), QuestPDF + SkiaSharp (recipe PDF printing), and Funcky.DiscriminatedUnion.
+- **`Foodblog.Test`** — xunit. References Web (gets DataAccess.Sqlite + Pipeline transitively) and DataAccess.InMemory directly.
 - **`Bbcode.Test`** — xunit. References Bbcode only.
 
-The project demonstrates functional programming principles in .NET 10. The core abstraction is a curried, reader-style pipeline expressed with delegates (`FunctionalBlog.Pipeline`):
+The project demonstrates functional programming principles in .NET 10. The core abstraction is a curried, reader-style pipeline expressed with delegates (`Foodblog.Pipeline`):
 
 ```
 Effect<T>  = Func<Env, ValueTask<T>>           // Effect.cs
@@ -63,8 +63,8 @@ The single `Env` instance is built once in `Program.cs` (`BuildEnv`), threaded t
 - **Middlewares** (Web) — `Middlewares.cs` holds `Recover` (catches exceptions, logs, 500 page) and `RequestLogging`. Cross-cutting concerns live in their own files: `AuthMiddleware`, `CsrfMiddleware`, `SlugMiddleware`, `ThemeMiddleware`, `LanguageMiddleware` — each layers state onto `Env` for downstream handlers.
 - **Handlers** (Web) — `App`-valued handler classes per feature area: `BlogHandlers`, `RecipeHandlers`, `IngredientHandlers`, `PageHandlers`, `ImageHandlers`, `TagHandlers`, `AuthHandlers`, `UsersHandlers`, `UserSettingsHandlers`, `AdminHandlers`/`AdminDashboardHandlers`, `Admin*`/`AdminUnitHandlers`/`AdminIngredientHandlers`/`AdminSearchHandlers`, `SearchHandlers`, `TranslationHandlers`, `ThemeHandlers`, `RecipePdfHandlers`, `ImageCleanupHandlers`, `StaticHandlers`.
 - **`StaticHandlers`** (Web) — serves CSS, JS, fonts, favicon, and images from embedded `wwwroot` resources, cached in `Lazy<>`.
-- **Domain model** — Articles (`Article`, `ArticleId`, `ArticleTitle`, `ArticleTeaser`, `ArticleText`), plus Identity, Roles, Recipes (incl. `RecipeIngredient`, `PreparationStep`, `Unit`), Translations, and value objects under `FunctionalBlog.Domain/<Area>/`.
-- **Repository contracts** (Application) — `IArticleRepository`, `IUserRepository`, `IRoleRepository`, `ISessionStore`, `IPasswordResetTokenStore`, `IRecipeRepository`, `IIngredientRepository`, `IUnitRepository`, `IImageRepository`, `IPageRepository`, `ITagRepository`, `ISlugRepository`, `ITranslationRepository`, `ISearchIndex`, `IQuickSearch`, plus `IPasswordHasher`/`IEmailSender`. Each has both an `InMemory*` (tests) and `Sqlite*` (production) implementation. The `IArticleRepository` behavioral spec lives in `FunctionalBlog.Test/ArticleRepositoryContract.cs`.
+- **Domain model** — Articles (`Article`, `ArticleId`, `ArticleTitle`, `ArticleTeaser`, `ArticleText`), plus Identity, Roles, Recipes (incl. `RecipeIngredient`, `PreparationStep`, `Unit`), Translations, and value objects under `Foodblog.Domain/<Area>/`.
+- **Repository contracts** (Application) — `IArticleRepository`, `IUserRepository`, `IRoleRepository`, `ISessionStore`, `IPasswordResetTokenStore`, `IRecipeRepository`, `IIngredientRepository`, `IUnitRepository`, `IImageRepository`, `IPageRepository`, `ITagRepository`, `ISlugRepository`, `ITranslationRepository`, `ISearchIndex`, `IQuickSearch`, plus `IPasswordHasher`/`IEmailSender`. Each has both an `InMemory*` (tests) and `Sqlite*` (production) implementation. The `IArticleRepository` behavioral spec lives in `Foodblog.Test/ArticleRepositoryContract.cs`.
 - **`*Form`** (Web) — one per form (`ArticleForm`, `RecipeForm`, `RegisterForm`, `LoginForm`, `ChangePasswordForm`, `PasswordReset*Form`, `IngredientForm`, `PageForm`, `UnitForm`, `ImageUploadForm`, `RoleForm`, `RuleForm`, `AssignRoleForm`). HTTP decoding/validation returning `Validated<IReadOnlyList<string>, Valid>`. Forms stay in Web — they're a presentation/transport concern, not a domain rule.
 - **`Validated<TFailure, TSuccess>`** (Web) — applicative-functor discriminated union for form validation. `Failure` accumulates all field errors; `Success` carries the fully-typed valid form.
 - **Views** (Web) — `*Views` classes (`BlogViews`, `RecipeViews`, `NavViews`, …), `Layout`, and the `Html`/`HtmlString` helpers. Server-rendered HTML with XSS protection via `WebUtility.HtmlEncode`; always build markup through the `Html` helpers rather than raw strings (encode leaf text, pass raw body for container elements). `BbcodeRenderer` (the `Bbcode` project) renders user BBCode bodies. CSS, JS, fonts, and images live under `wwwroot/` as embedded resources.
@@ -255,7 +255,7 @@ public static App CreateArticle => request => async env =>
 
 ### Testing
 
-Use `ValidatedAssert.IsSuccess` / `ValidatedAssert.IsFailure` (in `FunctionalBlog.Test/ValidatedAssert.cs`):
+Use `ValidatedAssert.IsSuccess` / `ValidatedAssert.IsFailure` (in `Foodblog.Test/ValidatedAssert.cs`):
 
 ```csharp
 var form = ValidatedAssert.IsSuccess(ArticleForm.Decode(validRequest));
@@ -271,21 +271,21 @@ All user-facing text (form validation messages, article content, page labels) is
 
 ### File layout
 
-One public type per file. Files are grouped into per-area folders, and each folder is a namespace (e.g. `FunctionalBlog.Domain.Articles`, `FunctionalBlog.Application.Identity`, `FunctionalBlog.Recipes`). The Web project's `GlobalUsings.cs` `global using`s every namespace (and binds the `App`/`Middleware` aliases), so within Web most code reads as if there were no namespaces. New files should sit in the folder for their area and declare the matching namespace.
+One public type per file. Files are grouped into per-area folders, and each folder is a namespace (e.g. `Foodblog.Domain.Articles`, `Foodblog.Application.Identity`, `Foodblog.Recipes`). The Web project's `GlobalUsings.cs` `global using`s every namespace (and binds the `App`/`Middleware` aliases), so within Web most code reads as if there were no namespaces. New files should sit in the folder for their area and declare the matching namespace.
 
-**`FunctionalBlog.Domain/`** — value objects/entities under `Articles/`, `Identity/`, `Roles/`, `Recipes/`, `Translations/` (and the polymorphic Tags/Slugs/Images/Pages types added by later features).
+**`Foodblog.Domain/`** — value objects/entities under `Articles/`, `Identity/`, `Roles/`, `Recipes/`, `Translations/` (and the polymorphic Tags/Slugs/Images/Pages types added by later features).
 
-**`FunctionalBlog.Application/`** — repository/service contracts under one folder per area (`Articles/`, `Identity/`, `Images/`, `Pages/`, `Recipes/`, `Roles/`, `Search/`, `Slugs/`, `Tags/`, `Translations/`).
+**`Foodblog.Application/`** — repository/service contracts under one folder per area (`Articles/`, `Identity/`, `Images/`, `Pages/`, `Recipes/`, `Roles/`, `Search/`, `Slugs/`, `Tags/`, `Translations/`).
 
-**`FunctionalBlog.Pipeline/`**: `Effect.cs`, `App.cs`, `Middleware.cs`, `Functional.cs` (generic delegates only).
+**`Foodblog.Pipeline/`**: `Effect.cs`, `App.cs`, `Middleware.cs`, `Functional.cs` (generic delegates only).
 
 **`Bbcode/`**: `BbcodeRenderer.cs` (+ `Bbcode.Test/BbcodeRendererTests.cs`).
 
-**`FunctionalBlog.DataAccess.InMemory/`**: `InMemory*` repository implementations, one folder per domain area.
+**`Foodblog.DataAccess.InMemory/`**: `InMemory*` repository implementations, one folder per domain area.
 
-**`FunctionalBlog.DataAccess.Sqlite/`**: `Sqlite*` repository implementations, `DatabaseMigrator`, `DapperTypeHandlers`, `SqliteConnectionFactory`, `Pbkdf2PasswordHasher` (`Identity/`), `TranslationSeeder` (`Translations/`), and `Migrations/NNNN_*.sql` (embedded resources, run in order by dbup).
+**`Foodblog.DataAccess.Sqlite/`**: `Sqlite*` repository implementations, `DatabaseMigrator`, `DapperTypeHandlers`, `SqliteConnectionFactory`, `Pbkdf2PasswordHasher` (`Identity/`), `TranslationSeeder` (`Translations/`), and `Migrations/NNNN_*.sql` (embedded resources, run in order by dbup).
 
-**`FunctionalBlog/`** (Web), grouped by feature folder, with shared infrastructure at the root:
+**`Foodblog/`** (Web), grouped by feature folder, with shared infrastructure at the root:
 
 1. HTTP model + bootstrap (root): `Request.cs`, `Response.cs`, `Env.cs`, `ViewContext.cs`, `HttpAdapter.cs`, `HttpMethod.cs`, `Program.cs`, `Seeder.cs`
 2. Pipeline + routing (root): `Middlewares.cs`, `Router.cs`, `RouteTable.cs`, `Routes.cs`, `SlugMiddleware.cs`, `SlugDispatch.cs`, `SlugIndex.cs`

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Funcky" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Foodblog.Domain\Foodblog.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

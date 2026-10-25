@@ -1,4 +1,4 @@
-# FunctionalBlog
+# Foodblog
 
 A German-language food blog and recipe site that doubles as a demonstration of **functional
 programming in C# / .NET 10**. The HTTP layer is built from scratch on a small, curried,
@@ -46,7 +46,7 @@ Requires the .NET 10 SDK.
 
 ```bash
 dotnet build          # build
-dotnet run --project FunctionalBlog
+dotnet run --project Foodblog
 ```
 
 The app listens on **https://localhost:65243** (HTTP: 65244). On first run it creates a SQLite
@@ -83,7 +83,7 @@ dotnet test           # run every xunit test project in the solution
 ## Architecture in one screen
 
 The core abstraction is a curried, reader-style pipeline expressed as delegates (in
-`FunctionalBlog.Pipeline`):
+`Foodblog.Pipeline`):
 
 ```
 Effect<T>  = Func<Env, ValueTask<T>>           // a computation needing the environment
@@ -110,14 +110,14 @@ the Web project also references.
 
 | Project | Role |
 | --- | --- |
-| `FunctionalBlog.Domain` | Entities and value objects. No project references — pure domain. |
-| `FunctionalBlog.Application` | Repository/service contracts, one folder per area. |
-| `FunctionalBlog.Pipeline` | The generic functional core (`Effect`, `App`, `Middleware`, `Functional`). |
-| `FunctionalBlog.DataAccess.InMemory` | In-memory repositories used by tests. |
-| `FunctionalBlog.DataAccess.Sqlite` | Production SQLite repositories, migrations, password hashing. |
+| `Foodblog.Domain` | Entities and value objects. No project references — pure domain. |
+| `Foodblog.Application` | Repository/service contracts, one folder per area. |
+| `Foodblog.Pipeline` | The generic functional core (`Effect`, `App`, `Middleware`, `Functional`). |
+| `Foodblog.DataAccess.InMemory` | In-memory repositories used by tests. |
+| `Foodblog.DataAccess.Sqlite` | Production SQLite repositories, migrations, password hashing. |
 | `Bbcode` | Standalone, dependency-free BBCode → HTML renderer. |
-| `FunctionalBlog` (Web) | Handlers, views, forms, pipeline wiring, ASP.NET bootstrap. |
-| `FunctionalBlog.Test` / `Bbcode.Test` | xunit test suites. |
+| `Foodblog` (Web) | Handlers, views, forms, pipeline wiring, ASP.NET bootstrap. |
+| `Foodblog.Test` / `Bbcode.Test` | xunit test suites. |
 
 ## Functional conventions
 

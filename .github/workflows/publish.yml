@@ -41,7 +41,7 @@ jobs:
       # so the single binary runs standalone.
       - name: Publish single-file (${{ matrix.rid }})
         run: >
-          dotnet publish FunctionalBlog/FunctionalBlog.csproj
+          dotnet publish Foodblog/Foodblog.csproj
           --configuration Release
           --runtime ${{ matrix.rid }}
           --self-contained true
@@ -53,14 +53,14 @@ jobs:
 
       - name: Rename executable
         run: >
-          mv "publish/FunctionalBlog${{ matrix.ext }}"
-          "FunctionalBlog-${GITHUB_REF_NAME}-${{ matrix.rid }}${{ matrix.ext }}"
+          mv "publish/Foodblog${{ matrix.ext }}"
+          "Foodblog-${GITHUB_REF_NAME}-${{ matrix.rid }}${{ matrix.ext }}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FunctionalBlog-${{ matrix.rid }}
-          path: FunctionalBlog-${{ github.ref_name }}-${{ matrix.rid }}${{ matrix.ext }}
+          name: Foodblog-${{ matrix.rid }}
+          path: Foodblog-${{ github.ref_name }}-${{ matrix.rid }}${{ matrix.ext }}
           if-no-files-found: error
 
   # Collect every artifact and cut a single release so the matrix jobs don't

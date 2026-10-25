@@ -11,6 +11,8 @@ namespace FunctionalBlog.Configuration;
 // "send test email" surfaces the error.
 public sealed class SmtpEmailSender : IEmailSender
 {
+    private const int ImplicitTlsPort = 465;
+
     private readonly ConfigurationCache _config;
     private readonly ILog _log;
 
@@ -35,8 +37,7 @@ public sealed class SmtpEmailSender : IEmailSender
         message.Body = new TextPart("plain") { Text = body };
 
         using var client = new SmtpClient();
-        var security = smtp.UseSsl ? SecureSocketOptions.StartTlsWhenAvailable : SecureSocketOptions.None;
-        await client.ConnectAsync(smtp.Host, smtp.Port, security);
+        await client.ConnectAsync(smtp.Host, smtp.Port, SocketOptions(smtp));
 
         if (!string.IsNullOrWhiteSpace(smtp.Username))
         {
@@ -47,4 +48,15 @@ public sealed class SmtpEmailSender : IEmailSender
         await client.DisconnectAsync(quit: true);
         _log.Info($"[E-Mail] gesendet an {to}: \"{subject}\"");
     }
+
+    // "SSL" means TLS is required, never opportunistic: StartTlsWhenAvailable would silently fall back
+    // to plain text when an attacker strips the STARTTLS offer, leaking credentials and reset links.
+    // Port 465 is implicit TLS (SMTPS); every other port must upgrade with STARTTLS or fail.
+    public static SecureSocketOptions SocketOptions(SmtpSettings smtp) =>
+        (smtp.UseSsl, smtp.Port) switch
+        {
+            (false, _) => SecureSocketOptions.None,
+            (true, ImplicitTlsPort) => SecureSocketOptions.SslOnConnect,
+            (true, _) => SecureSocketOptions.StartTls,
+        };
 }

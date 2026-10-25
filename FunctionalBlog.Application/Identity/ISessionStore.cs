@@ -7,4 +7,6 @@ public interface ISessionStore
     ValueTask<Option<Session>> Find(string token);
 
     ValueTask Delete(string token);
+
+    ValueTask DeleteAllForUser(UserId userId);
 }

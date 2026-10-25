@@ -33,8 +33,23 @@ public abstract class SessionStoreContract
         FunctionalAssert.None(await store.Find("tok2"));
     }
 
+    [Fact]
+    public async Task DeleteAllForUser_removes_only_that_users_sessions()
+    {
+        var store = CreateStore();
+
+        await store.Save(ASession("tok3", userId: 1));
+        await store.Save(ASession("tok4", userId: 1));
+        await store.Save(ASession("tok5", userId: 2));
+        await store.DeleteAllForUser(new UserId(1));
+
+        FunctionalAssert.None(await store.Find("tok3"));
+        FunctionalAssert.None(await store.Find("tok4"));
+        FunctionalAssert.Some(await store.Find("tok5"));
+    }
+
     protected abstract ISessionStore CreateStore();
 
-    private static Session ASession(string token) =>
-        new(token, new UserId(1), DateTimeOffset.UtcNow.AddDays(30));
+    private static Session ASession(string token, int userId = 1) =>
+        new(token, new UserId(userId), DateTimeOffset.UtcNow.AddDays(30));
 }

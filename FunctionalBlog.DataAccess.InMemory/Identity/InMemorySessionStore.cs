@@ -20,4 +20,14 @@ public sealed class InMemorySessionStore : ISessionStore
         _sessions.TryRemove(token, out _);
         return ValueTask.CompletedTask;
     }
+
+    public ValueTask DeleteAllForUser(UserId userId)
+    {
+        foreach (var session in _sessions.Values.Where(s => s.UserId == userId))
+        {
+            _sessions.TryRemove(session.Token, out _);
+        }
+
+        return ValueTask.CompletedTask;
+    }
 }

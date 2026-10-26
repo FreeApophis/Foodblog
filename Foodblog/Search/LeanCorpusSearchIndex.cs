@@ -15,6 +15,12 @@ namespace Foodblog.Search;
 
 public sealed class LeanCorpusSearchIndex : ISearchIndex, IDisposable
 {
+    // The SearcherManager polls the index directory for new commits (default every second), and each
+    // poll lists the directory and checks every segment file — about a third of a CPU core on the
+    // production server. This process is the only writer and refreshes explicitly after each commit
+    // (TryWrite, RebuildAsync), so the poll finds nothing; it cannot be switched off, only slowed.
+    private static readonly TimeSpan BackgroundRefreshInterval = TimeSpan.FromDays(1);
+
     // The underlying IndexWriter is not safe for concurrent use and the directory/writer/manager
     // are swapped wholesale on every rebuild, so all access is serialised through this gate.
     // A single lock is plenty for the traffic here; a ReaderWriterLockSlim would be the next step
@@ -44,7 +50,7 @@ public sealed class LeanCorpusSearchIndex : ISearchIndex, IDisposable
         PrepareCleanDirectory(_indexPath);
         _directory = new MMapDirectory(_indexPath);
         _writer = new IndexWriter(_directory, new IndexWriterConfig());
-        _manager = new SearcherManager(_directory, null);
+        _manager = new SearcherManager(_directory, new SearcherManagerConfig { RefreshInterval = BackgroundRefreshInterval });
     }
 
     public void IndexArticle(Article article) =>
@@ -184,6 +190,10 @@ public sealed class LeanCorpusSearchIndex : ISearchIndex, IDisposable
             }
 
             _writer.Commit();
+
+            // A rebuild leaves one small segment per document (hundreds on production); merge them so
+            // searches and refreshes touch a handful of files instead of thousands.
+            _writer.ForceMerge(1);
             _manager.MaybeRefresh();
             _lastRebuilt = Option.Some(DateTimeOffset.UtcNow);
         }

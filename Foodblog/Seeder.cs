@@ -6,8 +6,8 @@ public static class Seeder
 {
     private const string DefaultAdminEmail = "admin@blog.de";
 
-    // Earlier releases created DefaultAdminEmail with this password, and the 0002_seed migration still
-    // ships it. It is public, so it is only ever used to detect (and lock) that account, never to log in.
+    // Earlier releases created DefaultAdminEmail with this password (the 0002_seed migration used to
+    // ship it too). It is public, so it is only ever used to detect (and lock) that account, never to log in.
     private const string LeakedDefaultPassword = "Admin1234";
 
     private const string PasswordAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
@@ -162,8 +162,14 @@ public static class Seeder
     // on a fresh database and never added to an existing one.
     private static async ValueTask<Option<User>> BootstrapAdmin(Env env, Option<string> bootstrapAdminEmail)
     {
-        if ((await env.Users.All()).Count > 0 ||
-            bootstrapAdminEmail.SelectMany(Email.ParseOrNone).OrElse(Email.ParseOrNone(DefaultAdminEmail)) is not [var email])
+        var users = await env.Users.All();
+        if (users.Count > 0)
+        {
+            await ClaimSeededAdmin(env, users, bootstrapAdminEmail);
+            return Option<User>.None;
+        }
+
+        if (bootstrapAdminEmail.SelectMany(Email.ParseOrNone).OrElse(Email.ParseOrNone(DefaultAdminEmail)) is not [var email])
         {
             return Option<User>.None;
         }
@@ -177,6 +183,24 @@ public static class Seeder
             "(shown only this once). Log in and change it immediately.");
 
         return Option.Some(user);
+    }
+
+    // The 0002_seed migration ships one admin without a password, owning the seeded content. On the
+    // first startup it gets a random password (logged once) and, when given, the bootstrap email.
+    private static async ValueTask ClaimSeededAdmin(Env env, IReadOnlyList<User> users, Option<string> bootstrapAdminEmail)
+    {
+        if (users.FirstOrNone(u => u.PasswordHash.Length == 0 && u.RoleNames.Contains(AdminRoleName)) is not [var seeded])
+        {
+            return;
+        }
+
+        var password = GeneratePassword();
+        var email = bootstrapAdminEmail.SelectMany(Email.ParseOrNone).GetOrElse(seeded.Email);
+        await env.Users.Save(seeded with { Email = email, PasswordHash = env.PasswordHasher.Hash(password), EmailVerified = true });
+
+        env.Log.Info($"WARNING: The seeded admin account has no password yet. Set it for {email.Value} to " +
+            $"bootstrap-admin-password: {password} " +
+            "(shown only this once). Log in and change it immediately.");
     }
 
     private static string GeneratePassword() =>

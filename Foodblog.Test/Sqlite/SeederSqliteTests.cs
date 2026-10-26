@@ -1,25 +1,29 @@
 namespace Foodblog.Test.Sqlite;
 
-// The 0002_seed migration ships the admin@blog.de account with the publicly known default password,
-// so every freshly-migrated (or long-running) database has it. The seeder must lock it on startup.
+// The 0002_seed migration ships a single admin@blog.de account without a password, owning all seeded
+// content. The seeder must give it a one-time password on the first startup.
 public sealed class SeederSqliteTests : IDisposable
 {
+    private const string BootstrapPasswordMarker = "bootstrap-admin-password:";
+
     private readonly SqliteTestBase _db = new();
+    private readonly TestLog _log = new();
 
     public void Dispose() => _db.Dispose();
 
     [Fact]
-    public async Task SeedAsync_locks_the_migration_seeded_default_admin()
+    public async Task SeedAsync_gives_the_migration_seeded_admin_a_one_time_password()
     {
         var env = BuildEnv();
         var before = FunctionalAssert.Some(await env.Users.FindByEmail(new Email("admin@blog.de")));
-        Assert.True(env.PasswordHasher.Verify("Admin1234", before!.PasswordHash));
 
         await Seeder.SeedAsync(env);
 
         var after = FunctionalAssert.Some(await env.Users.FindByEmail(new Email("admin@blog.de")));
-        Assert.False(env.PasswordHasher.Verify("Admin1234", after!.PasswordHash));
-        Assert.Equal(before.Id, after.Id);
+        var line = Assert.Single(_log.Messages, m => m.Contains(BootstrapPasswordMarker));
+        var password = line[(line.IndexOf(BootstrapPasswordMarker, StringComparison.Ordinal) + BootstrapPasswordMarker.Length)..].Trim().Split(' ')[0];
+        Assert.True(env.PasswordHasher.Verify(password, after!.PasswordHash));
+        Assert.Equal(before!.Id, after.Id);
     }
 
     [Fact]
@@ -41,7 +45,7 @@ public sealed class SeederSqliteTests : IDisposable
         PasswordResets: new InMemoryPasswordResetTokenStore(),
         PasswordHasher: new Pbkdf2PasswordHasher(),
         Clock: new SystemClock(),
-        Log: new TestLog(),
+        Log: _log,
         CurrentUser: Guest.Instance,
         Recipes: new SqliteRecipeRepository(_db.Connections),
         Ingredients: new SqliteIngredientRepository(_db.Connections),

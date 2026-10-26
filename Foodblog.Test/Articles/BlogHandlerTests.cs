@@ -75,7 +75,7 @@ public sealed class BlogHandlerTests
     [Fact]
     public async Task Index_links_the_instagram_profile_without_loading_anything_from_instagram()
     {
-        var env = BuildEnv();
+        var env = BuildEnv() with { Config = TestConfiguration.With((ConfigurationKeys.InstagramHandle, "the_cooking.couple_")) };
 
         var response = await BlogHandlers.Index(AnEmptyRequest())(env);
 
@@ -88,7 +88,7 @@ public sealed class BlogHandlerTests
     [Fact]
     public async Task Index_offers_to_load_the_instagram_embed_only_after_consent()
     {
-        var env = BuildEnv();
+        var env = BuildEnv() with { Config = TestConfiguration.With((ConfigurationKeys.InstagramHandle, "the_cooking.couple_")) };
 
         var response = await BlogHandlers.Index(AnEmptyRequest())(env);
 
@@ -96,6 +96,17 @@ public sealed class BlogHandlerTests
         Assert.Contains("data-instagram-load", response.Body);
         Assert.Contains("data-instagram-remember", response.Body);
         Assert.DoesNotContain("<iframe", response.Body);
+    }
+
+    [Fact]
+    public async Task Index_without_a_configured_instagram_handle_shows_no_instagram_card()
+    {
+        var env = BuildEnv() with { Config = TestConfiguration.With() };
+
+        var response = await BlogHandlers.Index(AnEmptyRequest())(env);
+
+        Assert.DoesNotContain("instagram.com", response.Body);
+        Assert.DoesNotContain("data-instagram-embed", response.Body);
     }
 
     [Fact]

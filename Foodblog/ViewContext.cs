@@ -1,6 +1,6 @@
 namespace Foodblog;
 
-public sealed record ViewContext(IPrincipal Principal, Translate T, string CsrfToken, string Theme = "light", string Language = Languages.Default, SlugIndex? Slugs = null, string SiteName = "foodblog.ch", FocalIndex? Focal = null)
+public sealed record ViewContext(IPrincipal Principal, Translate T, string CsrfToken, string Theme = "light", string Language = Languages.Default, SlugIndex? Slugs = null, string SiteName = "foodblog.ch", FocalIndex? Focal = null, Option<int> SinceYear = default, Option<string> InstagramHandle = default, Option<int> Year = default)
 {
     public static ViewContext ForGuest(string csrfToken = "") =>
         new(Guest.Instance, Funcky.Functional.Identity, csrfToken);

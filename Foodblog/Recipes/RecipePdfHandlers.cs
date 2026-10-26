@@ -22,7 +22,7 @@ public static class RecipePdfHandlers
         var ingredientNames = (await env.Ingredients.All()).ToDictionary(i => i.Id, i => i.Name.Value);
         var cover = await LoadCover(env, recipe);
 
-        var model = RecipePdfMapper.Create(recipe, displayPortions, authorName, ingredientNames, cover.Bytes, t, cover.Focal);
+        var model = RecipePdfMapper.Create(recipe, displayPortions, authorName, ingredientNames, cover.Bytes, t, cover.Focal) with { SiteName = env.SiteName };
 
         var bytes = RecipePdf.Generate(model, design, t);
         var filename = $"{Slug.From(recipe.Name.Value)}.pdf";

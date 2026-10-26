@@ -9,6 +9,8 @@ public static class ConfigurationDefaults
     {
         [ConfigurationKeys.SiteName] = "foodblog.ch",
         [ConfigurationKeys.SiteUrl] = string.Empty,
+        [ConfigurationKeys.SiteSince] = string.Empty,
+        [ConfigurationKeys.InstagramHandle] = string.Empty,
         [ConfigurationKeys.SmtpHost] = string.Empty,
         [ConfigurationKeys.SmtpPort] = "587",
         [ConfigurationKeys.SmtpUsername] = string.Empty,

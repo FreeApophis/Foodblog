@@ -48,5 +48,16 @@ public sealed record Env(
             ? await maker.Ensure(entityType, entityId, sourceText)
             : entityId.ToString();
 
-    public ViewContext Ctx => new(CurrentUser, T, CsrfToken, Theme, Language, SlugIndex, SiteName, Focal);
+    public ViewContext Ctx => new(
+        CurrentUser,
+        T,
+        CsrfToken,
+        Theme,
+        Language,
+        SlugIndex,
+        SiteName,
+        Focal,
+        SinceYear: Config?.SinceYear ?? Option<int>.None,
+        InstagramHandle: Config?.InstagramHandle ?? Option<string>.None,
+        Year: Option.Some(Clock.Now.Year));
 }

@@ -4,7 +4,7 @@ public sealed class ContentSecurityPolicyTests
 {
     private const string ExpectedPolicy =
         "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; " +
-        "font-src 'self'; connect-src 'self'; frame-src https://www.instagram.com; object-src 'none'; base-uri 'self'; " +
+        "font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; " +
         "form-action 'self'; frame-ancestors 'self'";
 
     [Fact]
@@ -15,6 +15,28 @@ public sealed class ContentSecurityPolicyTests
         var response = await app(Get("/"))(Env());
 
         Assert.Equal(ExpectedPolicy, response.Headers["Content-Security-Policy"]);
+    }
+
+    [Fact]
+    public async Task Instagram_may_only_be_framed_when_a_handle_is_configured()
+    {
+        var app = ContentSecurityPolicy.Create()(Respond(Response.Html("<p>Hallo</p>")));
+        var env = Env() with { Config = TestConfiguration.With((ConfigurationKeys.InstagramHandle, "the_cooking.couple_")) };
+
+        var response = await app(Get("/"))(env);
+
+        Assert.Contains("frame-src https://www.instagram.com;", response.Headers["Content-Security-Policy"]);
+    }
+
+    [Fact]
+    public async Task Instagram_may_not_be_framed_without_a_handle()
+    {
+        var app = ContentSecurityPolicy.Create()(Respond(Response.Html("<p>Hallo</p>")));
+        var env = Env() with { Config = TestConfiguration.With() };
+
+        var response = await app(Get("/"))(env);
+
+        Assert.DoesNotContain("instagram", response.Headers["Content-Security-Policy"]);
     }
 
     [Fact]

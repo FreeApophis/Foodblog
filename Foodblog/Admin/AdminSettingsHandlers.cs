@@ -64,6 +64,8 @@ public static class AdminSettingsHandlers
 
         await env.Configuration.Set(ConfigurationKeys.SiteName, v.SiteName);
         await env.Configuration.Set(ConfigurationKeys.SiteUrl, v.SiteUrl);
+        await env.Configuration.Set(ConfigurationKeys.SiteSince, v.SiteSince);
+        await env.Configuration.Set(ConfigurationKeys.InstagramHandle, v.InstagramHandle);
         await env.Configuration.Set(ConfigurationKeys.SmtpHost, v.SmtpHost);
         await env.Configuration.Set(ConfigurationKeys.SmtpPort, v.SmtpPort.ToString(CultureInfo.InvariantCulture));
         await env.Configuration.Set(ConfigurationKeys.SmtpUsername, v.SmtpUsername);
@@ -105,6 +107,8 @@ public static class AdminSettingsHandlers
         {
             [ConfigurationKeys.SiteName] = F("site_name"),
             [ConfigurationKeys.SiteUrl] = F("site_url"),
+            [ConfigurationKeys.SiteSince] = F("site_since"),
+            [ConfigurationKeys.InstagramHandle] = F("instagram_handle"),
             [ConfigurationKeys.SmtpHost] = F("smtp_host"),
             [ConfigurationKeys.SmtpPort] = F("smtp_port"),
             [ConfigurationKeys.SmtpUsername] = F("smtp_username"),

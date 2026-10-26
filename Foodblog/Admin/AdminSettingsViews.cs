@@ -31,7 +31,11 @@ public static class AdminSettingsViews
 
         var siteFields =
             Html.Label(Html.Text(t("admin.settings.site_name")) + Html.Input("site_name", V(ConfigurationKeys.SiteName))) +
-            Html.Label(Html.Text(t("admin.settings.site_url")) + Html.Input("site_url", V(ConfigurationKeys.SiteUrl)));
+            Html.Label(Html.Text(t("admin.settings.site_url")) + Html.Input("site_url", V(ConfigurationKeys.SiteUrl))) +
+            Html.Label(Html.Text(t("admin.settings.site_since")) + Html.Input("site_since", V(ConfigurationKeys.SiteSince)));
+
+        var socialFields =
+            Html.Label(Html.Text(t("admin.settings.instagram_handle")) + Html.Input("instagram_handle", V(ConfigurationKeys.InstagramHandle)));
 
         var smtpFields =
             Html.Label(Html.Text(t("admin.settings.smtp_host")) + Html.Input("smtp_host", V(ConfigurationKeys.SmtpHost))) +
@@ -45,6 +49,7 @@ public static class AdminSettingsViews
 
         var formBody = Html.CsrfField(csrfToken) +
             Html.Fieldset(t("admin.settings.section_site"), siteFields) +
+            Html.Fieldset(t("admin.settings.section_social"), socialFields) +
             Html.Fieldset(t("admin.settings.section_smtp"), smtpFields) +
             Html.Button(t("admin.settings.save"));
 

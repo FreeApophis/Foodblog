@@ -133,6 +133,49 @@ public sealed class NavViewsTests
         Assert.DoesNotContain("name=\"lang\" value=\"de\" aria-current=\"true\"", nav);
     }
 
+    [Fact]
+    public void Utility_bar_shows_the_translated_tagline()
+    {
+        var bar = NavViews.UtilityBar(new ViewContext(Guest.Instance, NoOp, string.Empty));
+
+        Assert.Contains("NAV.TAGLINE", bar);
+        Assert.DoesNotContain("GENIESSEN", bar);
+    }
+
+    [Fact]
+    public void Utility_bar_shows_the_since_year_when_configured()
+    {
+        var bar = NavViews.UtilityBar(new ViewContext(Guest.Instance, NoOp, string.Empty, SinceYear: Option.Some(2016)));
+
+        Assert.Contains("NAV.SINCE 2016", bar);
+    }
+
+    [Fact]
+    public void Utility_bar_omits_the_since_year_when_not_configured()
+    {
+        var bar = NavViews.UtilityBar(new ViewContext(Guest.Instance, NoOp, string.Empty));
+
+        Assert.DoesNotContain("NAV.SINCE", bar);
+        Assert.DoesNotContain("2016", bar);
+    }
+
+    [Fact]
+    public void Footer_shows_the_current_year_and_the_site_name()
+    {
+        var footer = NavViews.Footer(new ViewContext(Guest.Instance, NoOp, string.Empty, SiteName: "mein-blog.ch", Year: Option.Some(2031)));
+
+        Assert.Contains("© 2031 MEIN-BLOG.CH", footer);
+    }
+
+    [Fact]
+    public void Footer_shows_the_translated_made_with_note()
+    {
+        var footer = NavViews.Footer(new ViewContext(Guest.Instance, NoOp, string.Empty));
+
+        Assert.Contains("FOOTER.MADE_WITH", footer);
+        Assert.DoesNotContain("ZÜRICH", footer);
+    }
+
     private static AuthenticatedUser BuildAuthUser(IReadOnlyList<Role> roles)
     {
         var user = User.Create(

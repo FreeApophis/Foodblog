@@ -51,6 +51,24 @@ public sealed class TranslationSeederTests
         Assert.Contains(all, t => t.Key == "error.notfound_message" && t.Language == "de");
     }
 
+    [Theory]
+    [InlineData("nav.tagline")]
+    [InlineData("nav.since")]
+    [InlineData("footer.made_with")]
+    [InlineData("recipe.pdf.footer_tagline")]
+    [InlineData("admin.settings.site_since")]
+    [InlineData("admin.settings.section_social")]
+    [InlineData("admin.settings.instagram_handle")]
+    [InlineData("settings.error.since_invalid")]
+    [InlineData("settings.error.instagram_invalid")]
+    public async Task Seeds_site_branding_strings_in_every_language(string key)
+    {
+        var repo = await SeedAsync();
+        var all = await repo.All();
+
+        Assert.All(Languages.Supported, lang => Assert.Contains(all, t => t.Key == key && t.Language == lang));
+    }
+
     private static async Task<InMemoryTranslationRepository> SeedAsync()
     {
         var repo = new InMemoryTranslationRepository();

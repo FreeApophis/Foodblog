@@ -90,6 +90,41 @@ public sealed class SettingsFormTests
         Assert.Contains("settings.error.from_address_invalid", errors);
     }
 
+    [Fact]
+    public void Decodes_the_since_year_and_the_instagram_handle_without_its_at_sign()
+    {
+        var form = ValidatedAssert.IsSuccess(SettingsForm.Decode(Request(since: "2016", instagram: "@the_cooking.couple_")));
+
+        Assert.Equal("2016", form.SiteSince);
+        Assert.Equal("the_cooking.couple_", form.InstagramHandle);
+    }
+
+    [Fact]
+    public void A_blank_since_year_and_instagram_handle_are_allowed()
+    {
+        var form = ValidatedAssert.IsSuccess(SettingsForm.Decode(Request(since: string.Empty, instagram: string.Empty)));
+
+        Assert.Equal(string.Empty, form.SiteSince);
+        Assert.Equal(string.Empty, form.InstagramHandle);
+    }
+
+    [Theory]
+    [InlineData("seit immer")]
+    [InlineData("16")]
+    [InlineData("20166")]
+    public void A_since_value_that_is_not_a_year_fails(string since)
+    {
+        Assert.Contains("settings.error.since_invalid", ValidatedAssert.IsFailure(SettingsForm.Decode(Request(since: since))));
+    }
+
+    [Fact]
+    public void An_instagram_value_that_is_not_a_handle_fails()
+    {
+        var errors = ValidatedAssert.IsFailure(SettingsForm.Decode(Request(instagram: "https://www.instagram.com/koch")));
+
+        Assert.Contains("settings.error.instagram_invalid", errors);
+    }
+
     private static Request Request(
         string siteName = "Blog",
         string siteUrl = "",
@@ -99,7 +134,9 @@ public sealed class SettingsFormTests
         string password = "",
         string fromAddress = "",
         string fromName = "",
-        bool useSsl = true)
+        bool useSsl = true,
+        string since = "",
+        string instagram = "")
     {
         var form = new Dictionary<string, string>
         {
@@ -111,6 +148,8 @@ public sealed class SettingsFormTests
             ["smtp_password"] = password,
             ["smtp_from_address"] = fromAddress,
             ["smtp_from_name"] = fromName,
+            ["site_since"] = since,
+            ["instagram_handle"] = instagram,
         };
 
         if (useSsl)

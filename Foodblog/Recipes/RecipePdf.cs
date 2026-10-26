@@ -34,8 +34,6 @@ public static class RecipePdf
     private const float HeroRatio = 595.28f / 250f;
     private const float PhotoRatio = 215f / 265f;
 
-    private const string BrandLine = "FOODBLOG";
-
     // Chef's-hat mark (a stand-in for the penguin banner logo we have no clean vector of).
     private const string ChefHatInner =
         """<g fill="#5b7b53"><circle cx="8.4" cy="10" r="2.7"/><circle cx="12" cy="8.6" r="3.1"/><circle cx="15.6" cy="10" r="2.7"/><rect x="7.3" y="10" width="9.4" height="5.4"/><rect x="8.1" y="15" width="7.8" height="2.7" rx="0.5"/></g>""";
@@ -67,6 +65,13 @@ public static class RecipePdf
     public static byte[] Generate(RecipePdfModel model, RecipePdfDesign design, Translate t) =>
         BuildDocument(model, design, t).GeneratePdf();
 
+    // The wordmark next to the chef's hat, e.g. "FOODBLOG.CH".
+    public static string BrandLine(string siteName) => siteName.ToUpperInvariant();
+
+    // The text in the footer bar, e.g. "FOODBLOG.CH — SELBER MACHEN".
+    public static string FooterLine(string siteName, Translate t) =>
+        $"{BrandLine(siteName)} — {t("recipe.pdf.footer_tagline").ToUpperInvariant()}";
+
     private static Document BuildDocument(RecipePdfModel model, RecipePdfDesign design, Translate t) =>
         Document.Create(container => container.Page(page =>
         {
@@ -90,7 +95,8 @@ public static class RecipePdf
             page.Footer().Element(footer => FooterBar(
                 footer,
                 design == RecipePdfDesign.Alternative ? GreenDark : Dark,
-                design == RecipePdfDesign.Alternative ? "#d7cba6" : OnDark));
+                design == RecipePdfDesign.Alternative ? "#d7cba6" : OnDark,
+                FooterLine(model.SiteName, t)));
         }));
 
     // C1 — Original · Tomate: full-bleed photo hero with the title overlaid, ingredients card + steps.
@@ -132,7 +138,7 @@ public static class RecipePdf
                                 .Text(model.DifficultyLabel).FontFamily(Mono).FontSize(7).FontColor(Cream).LetterSpacing(0.06f);
                         });
                     });
-                    layers.Layer().Padding(30).Element(brand => Brand(brand, "#d7cba6"));
+                    layers.Layer().Padding(30).Element(brand => Brand(brand, "#d7cba6", model.SiteName));
                 });
                 row.ConstantItem(215).Element(photo => Photo(photo, model.CoverImage, PhotoRatio, GreenDark, model.CoverFocal));
             });
@@ -184,12 +190,12 @@ public static class RecipePdf
                     c.Item().PaddingTop(8).Text(model.Title).FontFamily(Serif).FontSize(28).SemiBold().FontColor(Cream).LineHeight(1.05f);
                 });
 
-            layers.Layer().Padding(24).Element(brand => Brand(brand, Cream));
+            layers.Layer().Padding(24).Element(brand => Brand(brand, Cream, model.SiteName));
         });
     }
 
-    // Brand lockup: the chef's-hat mark (vector SVG) + the "FOODBLOG" wordmark.
-    private static void Brand(IContainer container, string textColor) =>
+    // Brand lockup: the chef's-hat mark (vector SVG) + the site-name wordmark.
+    private static void Brand(IContainer container, string textColor, string siteName) =>
         container.Row(row =>
         {
             row.ConstantItem(13).Height(13).Svg(size => $"""
@@ -199,7 +205,7 @@ public static class RecipePdf
                 </svg>
                 """);
             row.ConstantItem(7);
-            row.AutoItem().PaddingTop(3).Text(BrandLine).FontFamily(Mono).FontSize(7.5f).FontColor(textColor).LetterSpacing(0.18f);
+            row.AutoItem().PaddingTop(3).Text(BrandLine(siteName)).FontFamily(Mono).FontSize(7.5f).FontColor(textColor).LetterSpacing(0.18f);
         });
 
     // Renders a 24×24-viewBox icon scaled to its container.
@@ -332,9 +338,9 @@ public static class RecipePdf
         });
     }
 
-    private static void FooterBar(IContainer container, string background, string color) =>
+    private static void FooterBar(IContainer container, string background, string color, string text) =>
         container.Background(background).PaddingVertical(11).PaddingHorizontal(34)
-            .Text("FOODBLOG.CH — SELBER MACHEN").FontFamily(Mono).FontSize(7.5f).FontColor(color).LetterSpacing(0.12f);
+            .Text(text).FontFamily(Mono).FontSize(7.5f).FontColor(color).LetterSpacing(0.12f);
 
     // Crops the image to exactly the target width:height ratio so it fills its box without distortion
     // (cover), positioning the crop window around the focal point (matching the web slider) rather

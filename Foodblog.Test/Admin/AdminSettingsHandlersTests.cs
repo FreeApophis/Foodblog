@@ -30,6 +30,33 @@ public sealed class AdminSettingsHandlersTests
     }
 
     [Fact]
+    public async Task Save_persists_the_since_year_and_instagram_handle()
+    {
+        var config = new InMemoryConfigurationRepository();
+        var env = await BuildEnv(config);
+
+        await AdminSettingsHandlers.Save(SaveRequest(since: "2016", instagram: "@the_cooking.couple_"))(env);
+
+        Assert.Equal(Option.Some("2016"), await config.Get(ConfigurationKeys.SiteSince));
+        Assert.Equal(Option.Some("the_cooking.couple_"), await config.Get(ConfigurationKeys.InstagramHandle));
+        Assert.Equal(Option.Some("the_cooking.couple_"), env.Config!.InstagramHandle);
+    }
+
+    [Fact]
+    public async Task Show_renders_the_since_year_and_instagram_fields()
+    {
+        var config = new InMemoryConfigurationRepository();
+        await config.Set(ConfigurationKeys.InstagramHandle, "the_cooking.couple_");
+        var env = await BuildEnv(config);
+
+        var response = await AdminSettingsHandlers.Show(GetRequest())(env);
+
+        Assert.Contains("name=\"site_since\"", response.Body);
+        Assert.Contains("name=\"instagram_handle\"", response.Body);
+        Assert.Contains("value=\"the_cooking.couple_\"", response.Body);
+    }
+
+    [Fact]
     public async Task Save_with_an_invalid_form_returns_400_and_persists_nothing()
     {
         var config = new InMemoryConfigurationRepository();
@@ -114,11 +141,15 @@ public sealed class AdminSettingsHandlersTests
         string siteName = "Blog",
         string host = "",
         string port = "587",
-        string password = "")
+        string password = "",
+        string since = "",
+        string instagram = "")
     {
         var form = new Dictionary<string, string>
         {
             ["site_name"] = siteName,
+            ["site_since"] = since,
+            ["instagram_handle"] = instagram,
             ["site_url"] = string.Empty,
             ["smtp_host"] = host,
             ["smtp_port"] = port,

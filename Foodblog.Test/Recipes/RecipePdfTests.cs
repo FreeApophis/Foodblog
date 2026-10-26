@@ -43,6 +43,18 @@ public sealed class RecipePdfTests
         AssertIsPdf(RecipePdf.Generate(sparse, RecipePdfDesign.Alternative, Echo));
     }
 
+    [Fact]
+    public void Brand_line_is_the_site_name_in_capitals()
+    {
+        Assert.Equal("MEIN-BLOG.CH", RecipePdf.BrandLine("mein-blog.ch"));
+    }
+
+    [Fact]
+    public void Footer_line_combines_the_site_name_and_the_translated_tagline()
+    {
+        Assert.Equal("MEIN-BLOG.CH — RECIPE.PDF.FOOTER_TAGLINE", RecipePdf.FooterLine("mein-blog.ch", Echo));
+    }
+
     private static void AssertIsPdf(byte[] bytes)
     {
         Assert.NotNull(bytes);

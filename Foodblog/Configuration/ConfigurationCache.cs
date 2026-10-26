@@ -25,6 +25,12 @@ public sealed class ConfigurationCache
 
     public string SiteUrl => Get(ConfigurationKeys.SiteUrl);
 
+    // The Instagram account shown on the home page; None (no card, no framing) when unset or invalid.
+    public Option<string> InstagramHandle => Configuration.InstagramHandle.ParseOrNone(Get(ConfigurationKeys.InstagramHandle));
+
+    // The year the site went online ("seit 2016"); None when unset or not a year.
+    public Option<int> SinceYear => SiteSince.ParseOrNone(Get(ConfigurationKeys.SiteSince));
+
     // SiteUrl when it is a valid absolute https:// URL; None when unset or invalid.
     public Option<string> PublicBaseUrl => Configuration.SiteUrl.ParseOrNone(SiteUrl);
 

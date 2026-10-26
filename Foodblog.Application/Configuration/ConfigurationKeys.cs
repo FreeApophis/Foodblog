@@ -6,6 +6,8 @@ public static class ConfigurationKeys
 {
     public const string SiteName = "site.name";
     public const string SiteUrl = "site.url";
+    public const string SiteSince = "site.since";
+    public const string InstagramHandle = "social.instagram";
     public const string SmtpHost = "smtp.host";
     public const string SmtpPort = "smtp.port";
     public const string SmtpUsername = "smtp.username";

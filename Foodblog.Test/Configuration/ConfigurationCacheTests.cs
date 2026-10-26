@@ -55,4 +55,54 @@ public sealed class ConfigurationCacheTests
 
         Assert.Equal("Neu", cache.SiteName);
     }
+
+    [Fact]
+    public async Task InstagramHandle_is_none_when_unset()
+    {
+        var cache = await ConfigurationCache.LoadAsync(new InMemoryConfigurationRepository());
+
+        FunctionalAssert.None(cache.InstagramHandle);
+    }
+
+    [Fact]
+    public void InstagramHandle_is_the_stored_handle()
+    {
+        var cache = TestConfiguration.With((ConfigurationKeys.InstagramHandle, "the_cooking.couple_"));
+
+        Assert.Equal(Option.Some("the_cooking.couple_"), cache.InstagramHandle);
+    }
+
+    [Fact]
+    public void InstagramHandle_is_none_when_the_stored_value_is_not_a_handle()
+    {
+        var cache = TestConfiguration.With((ConfigurationKeys.InstagramHandle, "\"><script>"));
+
+        FunctionalAssert.None(cache.InstagramHandle);
+    }
+
+    [Fact]
+    public async Task SinceYear_is_none_when_unset()
+    {
+        var cache = await ConfigurationCache.LoadAsync(new InMemoryConfigurationRepository());
+
+        FunctionalAssert.None(cache.SinceYear);
+    }
+
+    [Theory]
+    [InlineData("2016", 2016)]
+    [InlineData(" 1999 ", 1999)]
+    public void SinceYear_is_the_stored_year(string stored, int expected)
+    {
+        var cache = TestConfiguration.With((ConfigurationKeys.SiteSince, stored));
+
+        Assert.Equal(Option.Some(expected), cache.SinceYear);
+    }
+
+    [Fact]
+    public void SinceYear_is_none_when_the_stored_value_is_not_a_year()
+    {
+        var cache = TestConfiguration.With((ConfigurationKeys.SiteSince, "seit immer"));
+
+        FunctionalAssert.None(cache.SinceYear);
+    }
 }

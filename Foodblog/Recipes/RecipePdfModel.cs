@@ -15,6 +15,10 @@ public sealed record RecipePdfModel(
     IReadOnlyList<string> Steps,
     IReadOnlyList<string> Tips,
     byte[]? CoverImage,
-    FocalPoint CoverFocal);
+    FocalPoint CoverFocal)
+{
+    // The configured site name for the wordmark and footer bar.
+    public string SiteName { get; init; } = string.Empty;
+}
 
 public sealed record RecipePdfIngredient(string Amount, string Name);

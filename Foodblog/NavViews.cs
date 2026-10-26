@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Foodblog;
 
 public static class NavViews
@@ -6,8 +8,8 @@ public static class NavViews
     public static string UtilityBar(ViewContext ctx) =>
         $"""
         <div class="utility-bar"><div class="utility-inner">
-            <span>{Html.Encode(ctx.SiteName.ToUpperInvariant())} — KOCHEN · BACKEN · GENIESSEN</span>
-            <span class="utility-meta"><span>SEIT 2016</span></span>
+            <span>{Html.Encode(ctx.SiteName.ToUpperInvariant())} — {Html.Encode(ctx.T("nav.tagline").ToUpperInvariant())}</span>
+            {SinceMeta(ctx)}
         </div></div>
         """;
 
@@ -40,6 +42,8 @@ public static class NavViews
 
         string Item(string href, string label) => $"<li>{Html.Link(href, label).Render()}</li>";
 
+        var year = ctx.Year.Match(none: string.Empty, some: y => y.ToString(CultureInfo.InvariantCulture) + " ");
+
         var links = Item("/", t("nav.blog")) + Item("/recipes", t("nav.recipes")) +
             Item("/ingredients", t("ingredient.list_title")) + Item("/pages", t("nav.pages"));
 
@@ -56,11 +60,16 @@ public static class NavViews
                     </div>
                 </div>
                 <div class="footer-bar"><div class="footer-bar-inner">
-                    <span>© 2026 {Html.Encode(ctx.SiteName.ToUpperInvariant())}</span><span>MADE WITH ❤ IN ZÜRICH</span>
+                    <span>© {year}{Html.Encode(ctx.SiteName.ToUpperInvariant())}</span><span>{Html.Encode(t("footer.made_with").ToUpperInvariant())}</span>
                 </div></div>
             </footer>
             """;
     }
+
+    private static string SinceMeta(ViewContext ctx) =>
+        ctx.SinceYear.Match(
+            none: string.Empty,
+            some: year => $"""<span class="utility-meta"><span>{Html.Encode(ctx.T("nav.since").ToUpperInvariant())} {year}</span></span>""");
 
     // Circular trigger (same footprint as the theme toggle) revealing a hover/focus dropdown.
     // Authenticated: initial avatar → Settings, Admin (when permitted), Logout. Guest: person

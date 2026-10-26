@@ -9,6 +9,8 @@ public static class SettingsForm
     public sealed record Valid(
         string SiteName,
         string SiteUrl,
+        string SiteSince,
+        string InstagramHandle,
         string SmtpHost,
         int SmtpPort,
         string SmtpUsername,
@@ -21,6 +23,8 @@ public static class SettingsForm
     {
         var siteName = Field(request, "site_name");
         var siteUrl = Field(request, "site_url");
+        var siteSince = Field(request, "site_since");
+        var instagramHandle = Field(request, "instagram_handle");
         var smtpHost = Field(request, "smtp_host");
         var smtpPort = Field(request, "smtp_port");
         var smtpUsername = Field(request, "smtp_username");
@@ -31,13 +35,15 @@ public static class SettingsForm
         var smtpFromName = Field(request, "smtp_from_name");
         var smtpUseSsl = request.Form.GetValueOrNone("smtp_use_ssl") is [_];
 
-        Func<string, string, string, int, string, string, string, string, bool, Valid> create =
-            (name, url, host, port, user, pass, from, fromName, ssl) =>
-                new Valid(name, url, host, port, user, pass, from, fromName, ssl);
+        Func<string, string, string, string, string, int, string, string, string, string, bool, Valid> create =
+            (name, url, since, instagram, host, port, user, pass, from, fromName, ssl) =>
+                new Valid(name, url, since, instagram, host, port, user, pass, from, fromName, ssl);
 
         return create
             .Apply(TryParseSiteName(siteName), Combine)
             .Apply(TryParseSiteUrl(siteUrl), Combine)
+            .Apply(TryParseSiteSince(siteSince), Combine)
+            .Apply(TryParseInstagramHandle(instagramHandle), Combine)
             .Apply(Ok(smtpHost), Combine)
             .Apply(TryParsePort(smtpPort), Combine)
             .Apply(Ok(smtpUsername), Combine)
@@ -58,6 +64,20 @@ public static class SettingsForm
             ? Ok(raw)
             : SiteUrl.ParseOrNone(raw).Match(
                 none: () => Validated.Fail<IReadOnlyList<string>, string>(["settings.error.site_url_invalid"]),
+                some: Ok);
+
+    // Optional; when given it must be a four-digit year.
+    private static Validated<IReadOnlyList<string>, string> TryParseSiteSince(string raw) =>
+        raw.Length == 0 || SiteSince.ParseOrNone(raw) is [_]
+            ? Ok(raw)
+            : Validated.Fail<IReadOnlyList<string>, string>(["settings.error.since_invalid"]);
+
+    // Optional; when given it must be a plain handle. A leading "@" is dropped.
+    private static Validated<IReadOnlyList<string>, string> TryParseInstagramHandle(string raw) =>
+        raw.Length == 0
+            ? Ok(raw)
+            : InstagramHandle.ParseOrNone(raw).Match(
+                none: () => Validated.Fail<IReadOnlyList<string>, string>(["settings.error.instagram_invalid"]),
                 some: Ok);
 
     private static Validated<IReadOnlyList<string>, int> TryParsePort(string raw) =>

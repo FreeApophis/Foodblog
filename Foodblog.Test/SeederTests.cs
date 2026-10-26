@@ -143,6 +143,49 @@ public sealed class SeederTests
     }
 
     [Fact]
+    public async Task SeedAsync_gives_the_seeded_admin_without_a_password_a_one_time_password()
+    {
+        var log = new TestLog();
+        var env = BuildEnv(log);
+        var seeded = await SavePasswordlessAdmin(env);
+
+        await Seeder.SeedAsync(env);
+
+        var admin = Assert.Single(await env.Users.All());
+        Assert.Equal(seeded.Id, admin.Id);
+        Assert.Equal(seeded.Email, admin.Email);
+        Assert.True(env.PasswordHasher.Verify(ExtractBootstrapPassword(log), admin.PasswordHash));
+    }
+
+    [Fact]
+    public async Task SeedAsync_moves_the_seeded_admin_to_the_bootstrap_admin_email()
+    {
+        var env = BuildEnv();
+        var seeded = await SavePasswordlessAdmin(env);
+
+        await Seeder.SeedAsync(env, Option.Some("owner@example.org"));
+
+        var admin = Assert.Single(await env.Users.All());
+        Assert.Equal(seeded.Id, admin.Id);
+        Assert.Equal("owner@example.org", admin.Email.Value);
+    }
+
+    [Fact]
+    public async Task SeedAsync_sets_the_seeded_admin_password_only_once()
+    {
+        var log = new TestLog();
+        var env = BuildEnv(log);
+        await SavePasswordlessAdmin(env);
+
+        await Seeder.SeedAsync(env);
+        var afterFirst = await env.Users.All();
+        await Seeder.SeedAsync(env);
+
+        Assert.Equal(afterFirst, await env.Users.All());
+        Assert.Single(log.Messages, m => m.Contains(BootstrapPasswordMarker));
+    }
+
+    [Fact]
     public async Task SeedAsync_is_idempotent_when_locking_the_default_admin()
     {
         var env = BuildEnv();
@@ -333,6 +376,20 @@ public sealed class SeederTests
             new DisplayName("Admin"),
             env.PasswordHasher.Hash(password),
             roleNames,
+            DateTimeOffset.UtcNow);
+        await env.Users.Save(user);
+        return user;
+    }
+
+    // Mirrors the admin the 0002_seed migration ships: it owns the seeded content but has no password yet.
+    private static async Task<User> SavePasswordlessAdmin(Env env)
+    {
+        var user = User.Create(
+            await env.Users.NextId(),
+            new Email("admin@blog.de"),
+            new DisplayName("Admin"),
+            string.Empty,
+            ["Admin"],
             DateTimeOffset.UtcNow);
         await env.Users.Save(user);
         return user;

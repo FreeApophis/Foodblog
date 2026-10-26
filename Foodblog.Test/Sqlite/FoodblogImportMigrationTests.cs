@@ -47,19 +47,36 @@ public sealed class FoodblogImportMigrationTests : IDisposable
     }
 
     [Fact]
-    public async Task Imports_the_two_authors_with_admin_role()
+    public async Task Imports_only_the_initial_admin_without_a_password()
     {
         var users = new SqliteUserRepository(_db.Connections);
 
-        // The two content authors are seeded first (Thomas id 1, Sabrina id 2); the dedicated
-        // admin@blog.de account follows at id 3.
-        var thomas = FunctionalAssert.Some(await users.FindById(new UserId(1)));
-        var sabrina = FunctionalAssert.Some(await users.FindById(new UserId(2)));
+        // No real accounts ship with the seed: a single placeholder admin owns all content and gets
+        // its (one-time, logged) password from the startup seeder.
+        var admin = Assert.Single(await users.All());
 
-        Assert.Equal("Thomas", thomas!.DisplayName.Value);
-        Assert.Equal("Sabrina", sabrina!.DisplayName.Value);
-        Assert.Contains("Admin", thomas.RoleNames);
-        Assert.Contains("Admin", sabrina.RoleNames);
+        Assert.Equal(new UserId(1), admin.Id);
+        Assert.Equal("admin@blog.de", admin.Email.Value);
+        Assert.Contains("Admin", admin.RoleNames);
+        Assert.Equal(string.Empty, admin.PasswordHash);
+    }
+
+    [Fact]
+    public async Task All_articles_and_recipes_belong_to_the_initial_admin()
+    {
+        var articles = await new SqliteArticleRepository(_db.Connections).All();
+        var recipes = await new SqliteRecipeRepository(_db.Connections).All();
+
+        Assert.All(articles, a => Assert.Equal(new UserId(1), a.AuthorId));
+        Assert.All(recipes, r => Assert.Equal(new UserId(1), r.AuthorId));
+    }
+
+    [Fact]
+    public async Task Imports_no_pages()
+    {
+        var pages = new SqlitePageRepository(_db.Connections);
+
+        Assert.Empty(await pages.All());
     }
 
     [Fact]

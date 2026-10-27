@@ -44,6 +44,16 @@ public sealed class RecipePdfTests
     }
 
     [Fact]
+    public void Generate_renders_characters_the_embedded_fonts_do_not_cover()
+    {
+        // User content may contain emoji or scripts none of the embedded fonts can draw; the PDF still renders.
+        var exotic = AModel() with { Title = "Sushi 寿司 🍣", Steps = ["Reis waschen ✓"] };
+
+        AssertIsPdf(RecipePdf.Generate(exotic, RecipePdfDesign.Default, Echo));
+        AssertIsPdf(RecipePdf.Generate(exotic, RecipePdfDesign.Alternative, Echo));
+    }
+
+    [Fact]
     public void Brand_line_is_the_site_name_in_capitals()
     {
         Assert.Equal("MEIN-BLOG.CH", RecipePdf.BrandLine("mein-blog.ch"));

@@ -33,4 +33,11 @@
     <ProjectReference Include="..\Foodblog.DataAccess.InMemory\Foodblog.DataAccess.InMemory.csproj" />
   </ItemGroup>
 
+  <!-- The release is a single-file binary without QuestPDF's default font archive (QuestPDF.Fonts.Lato.br)
+       next to it. Drop it from the test output too, so the PDF tests only see the fonts production sees. -->
+  <Target Name="DropQuestPdfDefaultFont" AfterTargets="Build">
+    <Delete Files="$(OutDir)QuestPDF.Fonts.Lato.br" />
+    <RemoveDir Directories="$(OutDir)LatoFont" />
+  </Target>
+
 </Project>

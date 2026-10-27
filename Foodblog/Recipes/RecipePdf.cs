@@ -48,6 +48,12 @@ public static class RecipePdf
     {
         QuestPDF.Settings.License = LicenseType.Community;
 
+        // The single-file release ships without QuestPDF's default font archive (Lato), so only the embedded
+        // fonts below exist: skip the missing default family instead of failing, and draw characters none of
+        // them covers (emoji, other scripts in user content) as placeholders instead of failing the download.
+        QuestPDF.Settings.ThrowOnMissingFontFamilies = false;
+        QuestPDF.Settings.ThrowOnMissingTextGlyphs = false;
+
         var assembly = typeof(RecipePdf).Assembly;
         foreach (var resource in assembly.GetManifestResourceNames())
         {
